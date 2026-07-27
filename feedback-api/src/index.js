@@ -36,7 +36,9 @@ export default {
 
     try {
       if (path === "/api/suggestions" && request.method === "POST") return await submit(request, env);
+      if (path === "/api/subscribe" && request.method === "POST") return await subscribe(request, env);
       if (path === "/verify" && request.method === "GET") return await verify(url, env);
+      if (path === "/unsubscribe" && request.method === "GET") return await unsubscribe(url, env);
       if (path === "/admin" && request.method === "GET") return html(ADMIN_PAGE);
       if (path === "/api/admin/suggestions" && request.method === "GET") return await adminList(request, env);
       if (path === "/api/admin/review" && request.method === "POST") return await adminReview(request, env);
@@ -125,12 +127,94 @@ async function submit(request, env) {
 }
 
 /* ------------------------------------------------------------------ *
+ * Mailing list for the printed calendar
+ * ------------------------------------------------------------------ */
+
+async function subscribe(request, env) {
+  const origin = request.headers.get("Origin") || "";
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ error: "We couldn't read that." }, 400, origin, env);
+  }
+
+  if (str(payload.website)) return json({ ok: true }, 200, origin, env);
+
+  const email = str(payload.email).toLowerCase();
+  if (!isEmail(email)) return json({ error: "That email address doesn't look right." }, 400, origin, env);
+
+  const existing = await env.DB.prepare(
+    "SELECT status FROM subscribers WHERE email = ?"
+  ).bind(email).first();
+
+  if (existing && existing.status === "subscribed") {
+    // Say the same thing either way, so the endpoint can't be used to find
+    // out whether an address is on the list.
+    return json({ ok: true }, 200, origin, env);
+  }
+
+  const ipHash = await hashIp(request, env);
+  const since = new Date(Date.now() - 86_400_000).toISOString();
+  const recent = await env.DB.prepare(
+    "SELECT COUNT(*) AS n FROM subscribers WHERE ip_hash = ? AND created_at > ?"
+  ).bind(ipHash, since).first();
+  if (recent && recent.n >= 10) {
+    return json({ error: "Too many sign-ups from here today. Please try again tomorrow." }, 429, origin, env);
+  }
+
+  const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+  await env.DB.prepare(
+    `INSERT INTO subscribers (email, created_at, status, ip_hash, verify_token)
+     VALUES (?, ?, 'pending', ?, ?)
+     ON CONFLICT(email) DO UPDATE SET created_at = excluded.created_at, verify_token = excluded.verify_token`
+  ).bind(email, new Date().toISOString(), ipHash, token).run();
+
+  const sent = await sendSubscribeEmail(env, { email, token });
+  if (!sent.ok) return json({ error: "We couldn't send the confirmation email just now. Please try again shortly." }, 502, origin, env);
+
+  return json({ ok: true }, 200, origin, env);
+}
+
+async function unsubscribe(url, env) {
+  const token = str(url.searchParams.get("token"));
+  if (!token) return html(confirmPage("This link is incomplete.", "Please use the whole link from your email."), 400);
+
+  const row = await env.DB.prepare("SELECT email FROM subscribers WHERE verify_token = ?").bind(token).first();
+  if (!row) return html(confirmPage("This link is no longer valid.", "You may already have been removed from the list."), 404);
+
+  await env.DB.prepare(
+    "UPDATE subscribers SET status = 'unsubscribed' WHERE verify_token = ?"
+  ).bind(token).run();
+
+  return html(confirmPage("You're removed from the list.", "We won't email you about the printed calendar again."));
+}
+
+/* ------------------------------------------------------------------ *
  * Email confirmation
  * ------------------------------------------------------------------ */
 
 async function verify(url, env) {
   const token = str(url.searchParams.get("token"));
   if (!token) return html(confirmPage("This link is incomplete.", "Please use the whole link from your email."), 400);
+
+  // The same link style confirms both a suggestion and a mailing-list sign-up.
+  const sub = await env.DB.prepare(
+    "SELECT email, status FROM subscribers WHERE verify_token = ?"
+  ).bind(token).first();
+
+  if (sub) {
+    if (sub.status === "subscribed") {
+      return html(confirmPage("Already confirmed.", "You're on the list for the printed calendar."));
+    }
+    await env.DB.prepare(
+      "UPDATE subscribers SET status = 'subscribed', confirmed_at = ? WHERE verify_token = ?"
+    ).bind(new Date().toISOString(), token).run();
+    return html(confirmPage(
+      "Kea leboha!",
+      "You're on the list. We'll write to you once the printed Alemanaka is ready."
+    ));
+  }
 
   const row = await env.DB.prepare(
     "SELECT id, name, status FROM suggestions WHERE verify_token = ?"
@@ -281,6 +365,45 @@ async function sendVerifyEmail(env, { name, email, token }) {
         `<p><a href="${link}" style="display:inline-block;padding:12px 24px;background:#a3721c;color:#fff;text-decoration:none;border-radius:999px">Confirm my suggestion</a></p>` +
         `<p style="font-size:14px;color:#5a6072">If you didn't write to us, you can ignore this — nothing will be sent. The link expires in three days.</p>` +
         `<p style="font-size:14px;color:#5a6072">Alemanaka — Barefaced Media</p>` +
+        `</div>`
+    })
+  });
+
+  if (!res.ok) {
+    console.error("Resend error", res.status, await res.text());
+    return { ok: false };
+  }
+  return { ok: true };
+}
+
+async function sendSubscribeEmail(env, { email, token }) {
+  const link = `${env.PUBLIC_API_URL}/verify?token=${encodeURIComponent(token)}`;
+  const stop = `${env.PUBLIC_API_URL}/unsubscribe?token=${encodeURIComponent(token)}`;
+
+  if (!env.RESEND_API_KEY) {
+    console.log("[dev] subscribe link for " + email + ": " + link);
+    return { ok: true };
+  }
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + env.RESEND_API_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: env.MAIL_FROM,
+      to: [email],
+      subject: "Confirm your place for the printed Alemanaka",
+      text:
+        `Lumela,\n\nPlease confirm you'd like to hear when the printed Alemanaka ` +
+        `calendar is ready:\n\n${link}\n\n` +
+        `If you didn't ask for this, ignore this email and nothing happens.\n\n` +
+        `Alemanaka — Barefaced Media\nRemove me from this list: ${stop}`,
+      html:
+        `<div style="font-family:Georgia,serif;font-size:16px;line-height:1.6;color:#20263a;max-width:520px">` +
+        `<p>Lumela,</p>` +
+        `<p>Please confirm you'd like to hear when the printed <strong>Alemanaka</strong> calendar is ready:</p>` +
+        `<p><a href="${link}" style="display:inline-block;padding:12px 24px;background:#a3721c;color:#fff;text-decoration:none;border-radius:999px">Confirm my place</a></p>` +
+        `<p style="font-size:14px;color:#5a6072">If you didn't ask for this, ignore this email and nothing happens.</p>` +
+        `<p style="font-size:13px;color:#8b90a0">Alemanaka — Barefaced Media · <a href="${stop}" style="color:#8b90a0">remove me from this list</a></p>` +
         `</div>`
     })
   });

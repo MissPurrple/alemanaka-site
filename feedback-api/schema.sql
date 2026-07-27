@@ -32,3 +32,18 @@ CREATE INDEX IF NOT EXISTS idx_suggestions_status  ON suggestions(status, create
 CREATE INDEX IF NOT EXISTS idx_suggestions_email   ON suggestions(email);
 CREATE INDEX IF NOT EXISTS idx_suggestions_ip      ON suggestions(ip_hash);
 CREATE INDEX IF NOT EXISTS idx_suggestions_token   ON suggestions(verify_token);
+
+-- Mailing list for the printed calendar. Double opt-in: an address only counts
+-- as subscribed once the link in the email has been clicked, so nobody can be
+-- signed up by somebody else.
+CREATE TABLE IF NOT EXISTS subscribers (
+  email          TEXT PRIMARY KEY,
+  created_at     TEXT NOT NULL,
+  status         TEXT NOT NULL DEFAULT 'pending',  -- pending | subscribed | unsubscribed
+  confirmed_at   TEXT,
+  ip_hash        TEXT,
+  verify_token   TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscribers_status ON subscribers(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_subscribers_token  ON subscribers(verify_token);

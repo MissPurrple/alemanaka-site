@@ -52,7 +52,9 @@ body {
   font-size: 17px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  /* `clip`, not `hidden`: `hidden` would turn body into its own scroll
+     container, which stops position:sticky pinning against the viewport. */
+  overflow-x: clip;
 }
 
 h1, h2, h3 { font-family: var(--serif); font-weight: 600; margin: 0; text-wrap: balance; }
@@ -265,6 +267,23 @@ section, .beat { position: relative; z-index: 1; }
   animation: driftDown 2s ease-in-out infinite;
 }
 
+/* ---------- Pinned sections ----------
+   The section stays on screen while the reader scrolls through the extra
+   height of its container. Scrolling still behaves normally — it simply has
+   further to travel, so the words hold long enough to be read. */
+.pin { position: relative; z-index: 1; }
+.pin-1 { height: 200vh; }   /* holds for roughly one extra screen  */
+.pin-2 { height: 300vh; }   /* holds for roughly two extra screens */
+.pin-inner {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pin-inner > * { width: 100%; }
+
 /* ---------- Interlude lines ---------- */
 .beat {
   min-height: 85vh;
@@ -273,6 +292,9 @@ section, .beat { position: relative; z-index: 1; }
   justify-content: center;
   padding: 6vh 24px;
 }
+.pin-inner .beat,
+.pin-inner #top,
+.pin-inner #moon-hero { min-height: 0; height: 100%; }
 .beat p {
   font-family: var(--serif);
   font-style: italic;
@@ -370,10 +392,11 @@ section, .beat { position: relative; z-index: 1; }
 #sd-actions li { margin-bottom: 9px; }
 
 /* ---------- Cards ---------- */
-.grid { display: grid; gap: 14px; }
-.grid.months { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
-.grid.moons  { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
-.grid.crops  { grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); }
+/* Flex rather than grid so a row that doesn't fill — the fourth moon card
+   beside three — centres instead of hanging off to the left. */
+.grid { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+.grid > * { flex: 1 1 210px; max-width: 330px; }
+.grid.crops > * { flex-basis: 245px; }
 
 .card {
   position: relative;
@@ -480,22 +503,42 @@ section, .beat { position: relative; z-index: 1; }
 
 /* ---------- Print notice ---------- */
 #print { text-align: center; padding: 14vh 24px 16vh; }
-#print .inner { max-width: 46ch; margin: 0 auto; }
+/* Wide enough for the email field and its button to sit side by side; the
+   paragraph above keeps its own narrower measure. */
+#print .inner { max-width: 580px; margin: 0 auto; }
+#print .sub { max-width: 46ch; margin: 0 auto; }
 #print h2 { font-size: clamp(1.5rem, 3.4vw, 2rem); margin: 14px 0; }
 #print .sub { color: var(--text-soft); }
-#print .status {
-  display: inline-block;
-  margin-top: 26px;
-  padding: 13px 28px;
-  border-radius: 999px;
-  border: 1px dashed rgba(232, 179, 74, 0.5);
-  background: rgba(232, 179, 74, 0.08);
-  color: var(--gold-lift);
-  font-family: var(--mono);
-  font-size: 0.82rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+.signup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 28px;
 }
+.signup input {
+  flex: 1 1 260px;
+  max-width: 340px;
+  padding: 14px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--edge);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 1rem;
+}
+.signup input:focus { outline: 2px solid var(--gold); outline-offset: 1px; border-color: transparent; }
+.signup .btn-gold { margin-top: 0; flex: 0 0 auto; }
+.signup-msg { margin-top: 14px; font-size: 0.88rem; min-height: 1.4em; }
+.signup-msg.bad { color: #ff9c85; }
+.signup-done { margin-top: 26px; }
+.signup-done .thanks {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  color: var(--gold-lift);
+  margin-bottom: 8px;
+}
+.signup-done p { color: var(--text-soft); font-size: 0.92rem; }
 
 /* ---------- Footer ---------- */
 footer {
@@ -639,6 +682,11 @@ footer .sign {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   [data-reveal] > .reveal { opacity: 1; transform: none; }
+  /* Release the pinned sections — holding someone in place is the last thing
+     you want when they've asked for less motion. */
+  .pin-1, .pin-2 { height: auto; }
+  .pin-inner { position: static; height: auto; }
+  .pin-inner .beat, .pin-inner #top, .pin-inner #moon-hero { min-height: 100vh; }
 }
 </style>
 </head>
@@ -661,6 +709,8 @@ footer .sign {
   <a class="suggest" href="#hlokomela">Keletso</a>
 </nav>
 
+<div class="pin pin-2">
+<div class="pin-inner">
 <section id="top">
   <h1>Alemanaka</h1>
   <p class="hero-sub">Alemanaka ea Temo ea Lesotho</p>
@@ -678,11 +728,19 @@ footer .sign {
     <i></i>
   </div>
 </section>
+</div>
+</div>
 
+<div class="pin pin-1">
+<div class="pin-inner">
 <div class="beat" data-reveal>
   <p class="reveal">The land keeps time by the sky above it.</p>
 </div>
+</div>
+</div>
 
+<div class="pin pin-2">
+<div class="pin-inner">
 <section id="moon-hero" data-reveal>
   <div class="reveal">
     <p class="eyebrow">Khoeli · Tonight</p>
@@ -700,9 +758,15 @@ footer .sign {
     <p class="moon-note">Drawn as the moon appears over the Maloti — the Southern-Hemisphere sky.</p>
   </div>
 </section>
+</div>
+</div>
 
+<div class="pin pin-1">
+<div class="pin-inner">
 <div class="beat" data-reveal>
   <p class="reveal">Its year turns in four seasons — Selemo, Lehlabula, Kotulo, Mariha.</p>
+</div>
+</div>
 </div>
 
 <section id="lihla" class="shell" data-reveal>
@@ -774,8 +838,12 @@ footer .sign {
   </div>
 </section>
 
+<div class="pin pin-1">
+<div class="pin-inner">
 <div class="beat" data-reveal>
   <p class="reveal">What grows here has always grown here.</p>
+</div>
+</div>
 </div>
 
 <section id="lijalo" class="shell" data-reveal>
@@ -812,8 +880,21 @@ footer .sign {
   <div class="reveal inner">
     <p class="eyebrow">Coming to print</p>
     <h2>Printed Alemanaka Calendar</h2>
-    <p class="sub">A printed wall-calendar edition of this almanac is in production as a sample, to gather feedback from farmers and families before a wider run.</p>
-    <p class="status">Sample in production</p>
+    <p class="sub">A printed wall-calendar edition is in production. Leave your email and we'll tell you the moment copies are ready.</p>
+
+    <form class="signup" id="signup-form" novalidate>
+      <label class="skip-link" for="s-email">Your email address</label>
+      <input id="s-email" type="email" required maxlength="254" autocomplete="email"
+        placeholder="your@email.com" aria-label="Your email address">
+      <input id="s-trap" class="trap" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn-gold" type="submit" id="s-submit">Reserve your copy</button>
+    </form>
+    <p class="signup-msg" id="s-msg" role="status" aria-live="polite"></p>
+
+    <div class="signup-done" id="signup-done" hidden>
+      <p class="thanks">Kea leboha!</p>
+      <p id="s-done-msg">Check your email and click the link to confirm — then you're on the list.</p>
+    </div>
   </div>
 </section>
 
@@ -1031,6 +1112,54 @@ window.ALEMANAKA_FEEDBACK = {
       })
       .catch(function () {
         fail("We couldn't reach the server. Please check your connection and try again.");
+      });
+  });
+
+  /* ---------- Printed-calendar mailing list ---------- */
+
+  var sForm = document.getElementById("signup-form");
+  var sMsg = document.getElementById("s-msg");
+  var sBtn = document.getElementById("s-submit");
+  var sDone = document.getElementById("signup-done");
+
+  sForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var email = document.getElementById("s-email").value.trim();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      sMsg.textContent = "That email address doesn't look right.";
+      sMsg.className = "signup-msg bad";
+      return;
+    }
+
+    sBtn.disabled = true;
+    sBtn.textContent = "Sending…";
+    sMsg.textContent = "";
+    sMsg.className = "signup-msg";
+
+    fetch(cfg.apiUrl + "/api/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, website: document.getElementById("s-trap").value })
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+      .then(function (res) {
+        sBtn.disabled = false;
+        sBtn.textContent = "Reserve your copy";
+        if (!res.ok) {
+          sMsg.textContent = (res.data && res.data.error) || "That didn't send. Please try again.";
+          sMsg.className = "signup-msg bad";
+          return;
+        }
+        sForm.hidden = true;
+        sMsg.textContent = "";
+        sDone.hidden = false;
+      })
+      .catch(function () {
+        sBtn.disabled = false;
+        sBtn.textContent = "Reserve your copy";
+        sMsg.textContent = "We couldn't reach the server. Please try again shortly.";
+        sMsg.className = "signup-msg bad";
       });
   });
 })();
@@ -1289,6 +1418,34 @@ window.ALEMANAKA_FEEDBACK = {
       shadows.push(x + "vw " + y + "vh 0 " + size + "px rgba(230,225,245," + op + ")");
     }
     document.getElementById("stars").style.boxShadow = shadows.join(",");
+  })();
+
+  /* ============================================================
+     STAR DRIFT
+     While a section is pinned the words hold still, so the sky is what
+     tells the reader their scrolling is doing something. Sine-based, so
+     it wanders gently and never drifts off the screen.
+     ============================================================ */
+
+  (function () {
+    var stars = document.getElementById("stars");
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    var queued = false;
+    function draw() {
+      queued = false;
+      var t = window.pageYOffset * 0.0016;
+      var x = Math.sin(t) * 46;
+      var y = Math.cos(t * 0.8) * 34;
+      stars.style.transform = "translate3d(" + x.toFixed(1) + "px," + y.toFixed(1) + "px,0)";
+    }
+    window.addEventListener("scroll", function () {
+      if (queued) return;
+      queued = true;
+      window.requestAnimationFrame(draw);
+    }, { passive: true });
+    draw();
   })();
 
   /* ============================================================
