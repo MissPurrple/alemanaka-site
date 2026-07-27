@@ -52,6 +52,16 @@ Most changes are data edits, not code edits.
 - **Seasons** — `startDay` and `endDay` in `SEASONS` are days offset from 1 August.
 - **Colours and type** — the custom properties at the top of the `<style>` block.
 
+## Suggestion box
+
+Visitors can suggest changes from the site. A suggestion only reaches the review
+queue once the sender clicks a link emailed to them, and only reaches the site once
+a person accepts it. See [`feedback-api/README.md`](feedback-api/README.md) for
+setup — it needs a free Cloudflare account and a mail provider.
+
+Until that is deployed, the form works against Cloudflare's public test key and
+will report that it cannot reach the server.
+
 ## Conventions to preserve
 
 These are easy to undo by accident, so they are worth stating.

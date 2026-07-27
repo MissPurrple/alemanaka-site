@@ -1,0 +1,29 @@
+name = "alemanaka-feedback"
+main = "src/index.js"
+compatibility_date = "2026-01-15"
+
+[vars]
+# Where the site is served from. Only these origins may post suggestions.
+ALLOWED_ORIGINS = "https://misspurrple.github.io"
+
+# The Worker's own public URL — used to build the link in the confirmation email.
+# Replace after the first deploy tells you the workers.dev address.
+PUBLIC_API_URL = "https://alemanaka-feedback.YOUR-SUBDOMAIN.workers.dev"
+
+# The From address on confirmation emails. Must be on a domain verified with Resend.
+MAIL_FROM = "Alemanaka <hello@misspurple.io>"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "alemanaka-feedback"
+database_id = "PASTE_AFTER_CREATING_THE_DATABASE"
+
+# Nightly clear-out of submissions whose email was never confirmed.
+[triggers]
+crons = ["0 3 * * *"]
+
+# Secrets are NOT stored here. Set them with `npx wrangler secret put NAME`:
+#   ADMIN_TOKEN       long random string; your password for /admin
+#   TURNSTILE_SECRET  from the Cloudflare Turnstile dashboard
+#   RESEND_API_KEY    from resend.com
+#   IP_SALT           any long random string; salts the stored IP hashes

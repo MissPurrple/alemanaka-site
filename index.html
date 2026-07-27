@@ -170,7 +170,7 @@ button:focus-visible {
 
 /* ---------- Layout ---------- */
 section, .beat { position: relative; z-index: 1; }
-.shell { max-width: var(--shell); margin: 0 auto; padding: 9vh 24px 10vh; }
+.shell { max-width: var(--shell); margin: 0 auto; padding: 14vh 24px 16vh; }
 
 .eyebrow {
   font-family: var(--mono);
@@ -267,7 +267,7 @@ section, .beat { position: relative; z-index: 1; }
 
 /* ---------- Interlude lines ---------- */
 .beat {
-  min-height: 46vh;
+  min-height: 85vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -292,7 +292,7 @@ section, .beat { position: relative; z-index: 1; }
 
 /* ---------- Moon ---------- */
 #moon-hero {
-  min-height: 78vh;
+  min-height: 92vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -479,7 +479,7 @@ section, .beat { position: relative; z-index: 1; }
 .note strong { color: var(--cream); }
 
 /* ---------- Print notice ---------- */
-#print { text-align: center; padding: 9vh 24px 10vh; }
+#print { text-align: center; padding: 14vh 24px 16vh; }
 #print .inner { max-width: 46ch; margin: 0 auto; }
 #print h2 { font-size: clamp(1.5rem, 3.4vw, 2rem); margin: 14px 0; }
 #print .sub { color: var(--text-soft); }
@@ -526,10 +526,113 @@ footer .sign {
   color: var(--text-soft);
 }
 
+/* ---------- Suggestion box ---------- */
+.dock a.suggest { color: var(--gold); }
+.dock a.suggest:hover { color: var(--gold-lift); background: rgba(232, 179, 74, 0.14); }
+
+#hlokomela { text-align: center; padding: 14vh 24px 6vh; }
+#hlokomela .inner { max-width: 52ch; margin: 0 auto; }
+#hlokomela h2 { font-size: clamp(1.5rem, 3.4vw, 2rem); margin: 14px 0; }
+#hlokomela .sub { color: var(--text-soft); }
+
+.btn-gold {
+  display: inline-block;
+  margin-top: 26px;
+  padding: 14px 30px;
+  border-radius: 999px;
+  border: 0;
+  background: linear-gradient(180deg, var(--gold-lift), var(--gold));
+  color: var(--bg-deep);
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  box-shadow: 0 0 30px rgba(232, 179, 74, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-gold:hover { transform: translateY(-3px); box-shadow: 0 0 44px rgba(232, 179, 74, 0.55); }
+
+.modal-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(5, 6, 13, 0.82);
+  backdrop-filter: blur(6px);
+  overflow-y: auto;
+}
+.modal-veil[hidden] { display: none; }
+
+.modal {
+  width: 100%;
+  max-width: 540px;
+  margin: auto;
+  background: #101733;
+  border: 1px solid var(--edge);
+  border-radius: 20px;
+  padding: 32px 30px 28px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+.modal h2 { font-size: 1.5rem; margin-bottom: 8px; }
+.modal .lede { color: var(--text-soft); font-size: 0.92rem; margin-bottom: 22px; }
+
+.field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
+.field label { font-family: var(--mono); font-size: 0.76rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mute); }
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--edge);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.field textarea { min-height: 130px; resize: vertical; }
+.field input:focus,
+.field select:focus,
+.field textarea:focus { outline: 2px solid var(--gold); outline-offset: 1px; border-color: transparent; }
+.field .hint { font-size: 0.78rem; color: var(--text-mute); }
+.field select option { background: #101733; color: var(--text); }
+
+/* Honeypot — hidden from people, tempting to naive bots. */
+.trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+.modal-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 6px; }
+.btn-quiet {
+  padding: 13px 24px;
+  border-radius: 999px;
+  border: 1px solid var(--edge);
+  background: transparent;
+  color: var(--text-soft);
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.btn-quiet:hover { background: rgba(255, 255, 255, 0.07); color: var(--text); }
+.modal .btn-gold { margin-top: 0; }
+.modal .btn-gold[disabled] { opacity: 0.55; cursor: wait; transform: none; }
+
+.form-msg { margin-top: 16px; font-size: 0.9rem; min-height: 1.4em; }
+.form-msg.bad { color: #ff9c85; }
+.form-msg.good { color: var(--selemo); }
+
+.privacy { margin-top: 18px; font-size: 0.78rem; color: var(--text-mute); line-height: 1.55; }
+
+.modal-done { text-align: center; padding: 14px 0 6px; }
+.modal-done h2 { margin-bottom: 12px; }
+.modal-done p { color: var(--text-soft); margin-bottom: 24px; }
+
 @media (max-width: 640px) {
   body { font-size: 16px; }
-  .shell { padding: 9vh 20px 10vh; }
-  .beat { min-height: 42vh; }
+  .shell { padding: 14vh 20px 16vh; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -555,6 +658,7 @@ footer .sign {
   <a href="#likhoeli">Months</a>
   <a href="#khoeli">Moon</a>
   <a href="#lijalo">Crops</a>
+  <a class="suggest" href="#hlokomela">Suggest</a>
 </nav>
 
 <section id="top">
@@ -689,6 +793,21 @@ footer .sign {
   </div>
 </section>
 
+<section id="hlokomela" data-reveal>
+  <div class="reveal inner">
+    <p class="eyebrow">Ho ntlafatsa · Making it better</p>
+    <h2>Know something we got wrong?</h2>
+    <p class="sub">
+      This almanac is built from books, national crop data, and knowledge that lives
+      with farmers and families — and the last of those is the part no dataset holds.
+      If a month's meaning reads wrong in your district, a planting window doesn't
+      match your fields, or a Sesotho word should be spelled another way, tell us.
+      Every suggestion is read by a person before anything changes.
+    </p>
+    <button class="btn-gold" type="button" data-open-suggest>Suggest a change</button>
+  </div>
+</section>
+
 <section id="print" data-reveal>
   <div class="reveal inner">
     <p class="eyebrow">Coming to print</p>
@@ -706,6 +825,216 @@ footer .sign {
     <p class="sign">Created by Barefaced Media</p>
   </div>
 </footer>
+
+<div class="modal-veil" id="suggest-veil" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="suggest-title">
+
+    <form id="suggest-form" novalidate>
+      <h2 id="suggest-title">Suggest a change</h2>
+      <p class="lede">Say it however you like — a sentence is plenty. We'll email you a link to confirm it's really you, then it goes to be read.</p>
+
+      <div class="field">
+        <label for="f-body">Your suggestion</label>
+        <textarea id="f-body" name="body" required maxlength="4000"
+          placeholder="I wish this was better because…"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="f-section">What is it about?</label>
+        <select id="f-section" name="section">
+          <option value="">Choose one (optional)</option>
+          <option>The seasons</option>
+          <option>The months</option>
+          <option>The moon</option>
+          <option>The crops</option>
+          <option>The Sesotho</option>
+          <option>The printed calendar</option>
+          <option>Something else</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="f-name">Your name</label>
+        <input id="f-name" name="name" type="text" required maxlength="120" autocomplete="name">
+      </div>
+
+      <div class="field">
+        <label for="f-email">Your email</label>
+        <input id="f-email" name="email" type="email" required maxlength="254" autocomplete="email">
+        <span class="hint">Only used to confirm your suggestion and reply. Never published, never shared.</span>
+      </div>
+
+      <div class="trap" aria-hidden="true">
+        <label for="f-website">Leave this empty</label>
+        <input id="f-website" name="website" type="text" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div id="turnstile-slot"></div>
+
+      <div class="modal-actions">
+        <button class="btn-gold" type="submit" id="f-submit">Send suggestion</button>
+        <button class="btn-quiet" type="button" data-close-suggest>Cancel</button>
+      </div>
+
+      <p class="form-msg" id="f-msg" role="status" aria-live="polite"></p>
+
+      <p class="privacy">
+        We keep your name, email, and message so we can check the suggestion is
+        genuine and write back. We also keep a scrambled record of your network to
+        catch repeat spam — never your actual address. Ask us any time and we'll
+        delete your entry.
+      </p>
+    </form>
+
+    <div class="modal-done" id="suggest-done" hidden>
+      <h2>Check your email</h2>
+      <p id="done-msg">We've sent you a link. Click it and your suggestion goes through to be read.</p>
+      <button class="btn-quiet" type="button" data-close-suggest>Close</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   SUGGESTION BOX
+   Set these two after deploying the Worker (see feedback-api/README.md).
+   The Turnstile key below is Cloudflare's public test key: it always
+   passes, so the form works before you have an account.
+   ============================================================ */
+window.ALEMANAKA_FEEDBACK = {
+  apiUrl:      "https://alemanaka-feedback.YOUR-SUBDOMAIN.workers.dev",
+  turnstileKey: "1x00000000000000000000AA"
+};
+</script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+<script>
+(function () {
+  "use strict";
+
+  var cfg = window.ALEMANAKA_FEEDBACK;
+  var veil = document.getElementById("suggest-veil");
+  var form = document.getElementById("suggest-form");
+  var done = document.getElementById("suggest-done");
+  var msg = document.getElementById("f-msg");
+  var submitBtn = document.getElementById("f-submit");
+  var widgetId = null;
+  var lastFocused = null;
+
+  function open(section) {
+    lastFocused = document.activeElement;
+    form.hidden = false;
+    done.hidden = true;
+    msg.textContent = "";
+    msg.className = "form-msg";
+    veil.hidden = false;
+    document.body.style.overflow = "hidden";
+
+    if (section) document.getElementById("f-section").value = section;
+    document.getElementById("f-body").focus();
+
+    if (window.turnstile && widgetId === null && cfg.turnstileKey) {
+      widgetId = window.turnstile.render("#turnstile-slot", {
+        sitekey: cfg.turnstileKey,
+        theme: "dark",
+        size: "flexible"
+      });
+    }
+  }
+
+  function close() {
+    veil.hidden = true;
+    document.body.style.overflow = "";
+    if (lastFocused && lastFocused.focus) lastFocused.focus();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-open-suggest]"), function (b) {
+    b.addEventListener("click", function () { open(b.getAttribute("data-section")); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-close-suggest]"), function (b) {
+    b.addEventListener("click", close);
+  });
+
+  // The nav "Suggest" link opens the box rather than only scrolling to it.
+  var navSuggest = document.querySelector(".dock a.suggest");
+  if (navSuggest) {
+    navSuggest.addEventListener("click", function (e) {
+      e.preventDefault();
+      document.getElementById("hlokomela").scrollIntoView({ behavior: "smooth" });
+      setTimeout(function () { open(); }, 400);
+    });
+  }
+
+  veil.addEventListener("mousedown", function (e) { if (e.target === veil) close(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !veil.hidden) close();
+  });
+
+  // Keep tabbing inside the dialog while it is open.
+  veil.addEventListener("keydown", function (e) {
+    if (e.key !== "Tab") return;
+    var focusable = veil.querySelectorAll('a[href], button:not([disabled]), input:not([tabindex="-1"]), select, textarea, iframe');
+    if (!focusable.length) return;
+    var first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+
+  function fail(text) {
+    msg.textContent = text;
+    msg.className = "form-msg bad";
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Send suggestion";
+    if (window.turnstile && widgetId !== null) window.turnstile.reset(widgetId);
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    var body = document.getElementById("f-body").value.trim();
+    var name = document.getElementById("f-name").value.trim();
+    var email = document.getElementById("f-email").value.trim();
+
+    if (body.length < 10) return fail("Please say a little more about your suggestion.");
+    if (name.length < 2) return fail("Please add your name.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return fail("That email address doesn't look right.");
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Sending…";
+    msg.textContent = "";
+    msg.className = "form-msg";
+
+    var token = "";
+    if (window.turnstile && widgetId !== null) token = window.turnstile.getResponse(widgetId) || "";
+
+    fetch(cfg.apiUrl + "/api/suggestions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name,
+        email: email,
+        body: body,
+        section: document.getElementById("f-section").value,
+        website: document.getElementById("f-website").value,
+        turnstileToken: token
+      })
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+      .then(function (res) {
+        if (!res.ok) return fail(res.data && res.data.error ? res.data.error : "That didn't send. Please try again.");
+        form.hidden = true;
+        done.hidden = false;
+        form.reset();
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Send suggestion";
+        document.getElementById("done-msg").focus();
+      })
+      .catch(function () {
+        fail("We couldn't reach the server. Please check your connection and try again.");
+      });
+  });
+})();
+</script>
 
 <script>
 (function () {
