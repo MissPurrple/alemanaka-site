@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alemanaka ea Temo — Lesotho Agricultural Calendar</title>
+<meta name="description" content="A living almanac of Lesotho's planting seasons, moon cycles, and indigenous crops. Created by Barefaced Media.">
+<style>
+/* ============================================================
+   ALEMANAKA — Lesotho Agricultural Calendar
+   Single-file site. No build step, no external requests.
+   Palette and type live in the custom properties below.
+   ============================================================ */
+
+:root {
+  --bg-deep:    #05060d;
+  --bg-lift:    #141a30;
+  --panel:      rgba(255, 255, 255, 0.04);
+  --panel-hi:   rgba(255, 255, 255, 0.07);
+  --edge:       rgba(242, 238, 224, 0.14);
+
+  --cream:      #f2eee0;
+  --text:       rgba(242, 238, 224, 0.92);
+  --text-soft:  rgba(242, 238, 224, 0.78);
+  --text-mute:  rgba(242, 238, 224, 0.68);
+
+  --gold:       #e8b34a;
+  --gold-lift:  #f5c876;
+  --ember:      #e2604a;
+
+  --selemo:     #8bcf6a;
+  --lehlabula:  #5fd9a6;
+  --kotulo:     #eab654;
+  --mariha:     #7fa8e6;
+
+  --serif: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  --sans:  "Helvetica Neue", Helvetica, system-ui, -apple-system, sans-serif;
+  --mono:  "Courier New", Consolas, ui-monospace, monospace;
+
+  --shell: 1100px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse 90% 60% at 50% 0%, var(--bg-lift) 0%, var(--bg-deep) 60%) fixed, var(--bg-deep);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+em { font-style: italic; }
+
+/* ---------- Keyboard focus: visible everywhere ---------- */
+a:focus-visible,
+[tabindex]:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--gold-lift);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+#wheel [tabindex]:focus-visible {
+  outline: none;
+  stroke: var(--gold-lift) !important;
+  stroke-width: 17 !important;
+  opacity: 1 !important;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 12px;
+  z-index: 100;
+  padding: 10px 18px;
+  background: var(--gold);
+  color: var(--bg-deep);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 999px;
+  text-decoration: none;
+}
+.skip-link:focus { left: 12px; }
+
+/* ---------- Ambient sky ---------- */
+#stars {
+  position: fixed;
+  inset: 0;
+  width: 1px;
+  height: 1px;
+  z-index: 0;
+  pointer-events: none;
+}
+.twinkle {
+  position: fixed;
+  border-radius: 50%;
+  background: var(--cream);
+  z-index: 0;
+  pointer-events: none;
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+@keyframes twinkle    { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.85; } }
+@keyframes driftDown  { 0%, 100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 0.9; transform: translateY(6px); } }
+@keyframes spinSlow   { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes moonFloat  { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes moonBreathe {
+  0%, 100% { box-shadow: 0 0 50px rgba(232,179,74,0.22), 0 0 110px rgba(232,179,74,0.10); }
+  50%      { box-shadow: 0 0 66px rgba(232,179,74,0.32), 0 0 140px rgba(232,179,74,0.16); }
+}
+
+/* ---------- Chrome ---------- */
+.brand {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 40;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.brand:hover { color: var(--cream); }
+
+.dock {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgba(10, 12, 22, 0.82);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--edge);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  max-width: calc(100vw - 32px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.dock::-webkit-scrollbar { display: none; }
+.dock a {
+  padding: 9px 16px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--text-mute);
+  transition: color 0.2s ease, background 0.2s ease;
+}
+.dock a:hover { color: var(--cream); background: rgba(255, 255, 255, 0.06); }
+.dock a.active { color: var(--gold-lift); text-shadow: 0 0 12px var(--gold); }
+
+/* ---------- Layout ---------- */
+section, .beat { position: relative; z-index: 1; }
+.shell { max-width: var(--shell); margin: 0 auto; padding: 9vh 24px 10vh; }
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.section-head { text-align: center; max-width: 62ch; margin: 0 auto 44px; }
+.section-head h2 { font-size: clamp(1.7rem, 4vw, 2.4rem); margin: 12px 0 0; }
+.section-head .sub { color: var(--text-soft); margin-top: 14px; }
+
+/* ---------- Hero ---------- */
+#top {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+}
+#top h1 {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(3.2rem, 13vw, 7rem);
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+.hero-sub {
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.hero-now {
+  margin-top: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+}
+.hero-now .pair { display: inline-flex; align-items: center; gap: 7px; }
+#season-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.jump {
+  margin-top: 30px;
+  display: inline-block;
+  padding: 12px 26px;
+  border-radius: 999px;
+  border: 1px solid var(--edge);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.jump:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--gold);
+}
+
+.scroll-hint {
+  margin-top: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.scroll-hint span {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.scroll-hint i {
+  width: 1px;
+  height: 34px;
+  background: linear-gradient(180deg, rgba(242, 238, 224, 0.6), transparent);
+  animation: driftDown 2s ease-in-out infinite;
+}
+
+/* ---------- Interlude lines ---------- */
+.beat {
+  min-height: 46vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6vh 24px;
+}
+.beat p {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(1.3rem, 3.4vw, 2rem);
+  text-align: center;
+  max-width: 24ch;
+  color: var(--text);
+}
+
+/* ---------- Reveal on scroll ---------- */
+[data-reveal] > .reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 1s ease, transform 1s ease;
+}
+[data-reveal].shown > .reveal { opacity: 1; transform: translateY(0); }
+
+/* ---------- Moon ---------- */
+#moon-hero {
+  min-height: 78vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6vh 24px;
+}
+.moon-stage { position: relative; width: 220px; height: 220px; margin: 30px auto 0; }
+.moon-halo {
+  position: absolute;
+  inset: -36px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg,
+    rgba(232,179,74,0) 0%, rgba(232,179,74,0.35) 18%, rgba(232,179,74,0) 40%,
+    rgba(232,179,74,0) 60%, rgba(232,179,74,0.2) 78%, rgba(232,179,74,0) 100%);
+  filter: blur(6px);
+  animation: spinSlow 22s linear infinite;
+}
+.moon-body {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: #0d1226;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: moonBreathe 6s ease-in-out infinite, moonFloat 8s ease-in-out infinite;
+}
+#phase-name { margin-top: 34px; font-family: var(--serif); font-size: clamp(1.4rem, 3.6vw, 2rem); font-weight: 600; }
+#phase-detail {
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 0.86rem;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+}
+.moon-note { margin: 22px auto 0; font-size: 0.85rem; color: var(--text-mute); max-width: 34ch; }
+
+/* ---------- Season wheel ---------- */
+.wheel-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 48px;
+  align-items: center;
+  justify-content: center;
+}
+.wheel-col { flex: 1 1 320px; max-width: 460px; min-width: 260px; }
+#wheel { width: 100%; height: auto; display: block; overflow: visible; }
+#wheel .arc { cursor: pointer; transition: opacity 0.3s ease, stroke-width 0.3s ease, filter 0.3s ease; }
+
+#season-detail {
+  flex: 1 1 340px;
+  min-width: 280px;
+  max-width: 460px;
+  position: relative;
+  padding: 30px 30px 30px 34px;
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--edge);
+  border-radius: 18px;
+}
+#sd-rail {
+  position: absolute;
+  left: 0;
+  top: 20px;
+  bottom: 20px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+}
+#sd-name { font-size: 1.5rem; }
+#sd-timeline { font-family: var(--mono); font-size: 0.84rem; color: var(--text-soft); margin: 8px 0 14px; }
+#sd-weather { color: var(--text-soft); font-size: 0.94rem; margin-bottom: 16px; }
+#sd-actions { margin: 0; padding-left: 20px; font-size: 0.94rem; color: var(--text-soft); }
+#sd-actions li { margin-bottom: 9px; }
+
+/* ---------- Cards ---------- */
+.grid { display: grid; gap: 14px; }
+.grid.months { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.grid.moons  { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.grid.crops  { grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); }
+
+.card {
+  position: relative;
+  padding: 22px 20px 18px;
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--edge);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-4px);
+  background: var(--panel-hi);
+  border-color: rgba(242, 238, 224, 0.24);
+}
+.card .band { position: absolute; top: 0; left: 18px; right: 18px; height: 2px; }
+.card .label {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.card .name { font-family: var(--serif); font-size: 1.2rem; font-weight: 600; }
+.card .body { font-size: 0.88rem; color: var(--text-soft); line-height: 1.55; }
+.card .source { font-size: 0.76rem; color: var(--text-mute); font-style: italic; }
+.card.current { background: rgba(232, 179, 74, 0.08); border-color: var(--gold); }
+.card .now-tag {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-lift);
+}
+.moon-card .st {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+/* ---------- Crop month strips ---------- */
+.strip { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; padding-top: 6px; }
+.strip .cell { height: 8px; border-radius: 3px; background: rgba(242, 238, 224, 0.16); }
+.strip .cell.plant   { background: var(--gold);  box-shadow: 0 0 6px var(--gold); }
+.strip .cell.harvest { background: var(--ember); box-shadow: 0 0 6px var(--ember); }
+.strip-months {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 4px;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-mute);
+  text-align: center;
+}
+.key {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+.key span { display: inline-flex; align-items: center; gap: 8px; }
+.key i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+/* ---------- Chips & notes ---------- */
+.chips {
+  margin-top: 30px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 0.86rem;
+  color: var(--text-soft);
+}
+.chips span {
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--edge);
+  white-space: nowrap;
+}
+.note {
+  margin: 26px auto 0;
+  padding: 16px 22px;
+  border-left: 3px solid var(--ember);
+  background: rgba(226, 96, 74, 0.1);
+  border-radius: 0 10px 10px 0;
+  font-size: 0.88rem;
+  color: var(--text-soft);
+  max-width: 72ch;
+}
+.note strong { color: var(--cream); }
+
+/* ---------- Print notice ---------- */
+#print { text-align: center; padding: 9vh 24px 10vh; }
+#print .inner { max-width: 46ch; margin: 0 auto; }
+#print h2 { font-size: clamp(1.5rem, 3.4vw, 2rem); margin: 14px 0; }
+#print .sub { color: var(--text-soft); }
+#print .status {
+  display: inline-block;
+  margin-top: 26px;
+  padding: 13px 28px;
+  border-radius: 999px;
+  border: 1px dashed rgba(232, 179, 74, 0.5);
+  background: rgba(232, 179, 74, 0.08);
+  color: var(--gold-lift);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ---------- Footer ---------- */
+footer {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid rgba(242, 238, 224, 0.12);
+  /* Bottom padding clears the fixed nav dock so the signature is never hidden. */
+  padding: 50px 24px 180px;
+  font-size: 0.88rem;
+  color: var(--text-soft);
+  text-align: center;
+}
+footer .inner { max-width: 1000px; margin: 0 auto; }
+footer h3 { font-size: 1rem; margin-bottom: 10px; color: var(--text); }
+footer .body { margin: 0 auto; max-width: 58ch; }
+footer .fine {
+  margin-top: 30px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(242, 238, 224, 0.12);
+  font-size: 0.8rem;
+  color: var(--text-mute);
+}
+footer .sign {
+  margin-top: 6px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 0.92rem;
+  color: var(--text-soft);
+}
+
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .shell { padding: 9vh 20px 10vh; }
+  .beat { min-height: 42vh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  [data-reveal] > .reveal { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#lihla">Skip to the calendar</a>
+
+<div id="stars" aria-hidden="true"></div>
+<div class="twinkle" aria-hidden="true" style="top:18%; left:12%; width:3px; height:3px;"></div>
+<div class="twinkle" aria-hidden="true" style="top:64%; left:82%; width:2px; height:2px; animation-delay:1.2s;"></div>
+<div class="twinkle" aria-hidden="true" style="top:40%; left:88%; width:3px; height:3px; animation-delay:0.6s;"></div>
+
+<a class="brand" href="#top">Alemanaka</a>
+
+<nav class="dock" aria-label="Sections">
+  <a href="#lihla">Seasons</a>
+  <a href="#likhoeli">Months</a>
+  <a href="#khoeli">Moon</a>
+  <a href="#lijalo">Crops</a>
+</nav>
+
+<section id="top">
+  <h1>Alemanaka</h1>
+  <p class="hero-sub">Alemanaka ea Temo ea Lesotho</p>
+
+  <div class="hero-now">
+    <span class="pair"><span id="season-dot"></span><span id="season-chip">&nbsp;</span></span>
+    <span aria-hidden="true">·</span>
+    <span id="today-date">&nbsp;</span>
+  </div>
+
+  <a class="jump" href="#likhoeli">See this month</a>
+
+  <div class="scroll-hint" aria-hidden="true">
+    <span>scroll</span>
+    <i></i>
+  </div>
+</section>
+
+<div class="beat" data-reveal>
+  <p class="reveal">The land keeps time by the sky above it.</p>
+</div>
+
+<section id="moon-hero" data-reveal>
+  <div class="reveal">
+    <p class="eyebrow">Khoeli · Tonight</p>
+    <div class="moon-stage">
+      <div class="moon-halo" aria-hidden="true"></div>
+      <div class="moon-body">
+        <svg id="moon-svg" width="190" height="190" viewBox="0 0 150 150" role="img" aria-label="Tonight's moon phase">
+          <circle cx="75" cy="75" r="60" fill="#0d1226" stroke="rgba(242,238,224,0.2)" stroke-width="1.5"></circle>
+          <path id="moon-lit" fill="#f3ecd8" d=""></path>
+        </svg>
+      </div>
+    </div>
+    <div id="phase-name">&nbsp;</div>
+    <div id="phase-detail">&nbsp;</div>
+    <p class="moon-note">Drawn as the moon appears over the Maloti — the Southern-Hemisphere sky.</p>
+  </div>
+</section>
+
+<div class="beat" data-reveal>
+  <p class="reveal">Its year turns in four seasons — Selemo, Lehlabula, Kotulo, Mariha.</p>
+</div>
+
+<section id="lihla" class="shell" data-reveal>
+  <div class="reveal">
+    <div class="section-head">
+      <p class="eyebrow">Lihla · Seasons</p>
+      <h2>One turn of the agricultural year</h2>
+      <p class="sub">The Basotho year begins with the spring rains of <em>Phato</em> (August) and closes with the winter digging of <em>Phupu</em> (July). Select a season on the wheel to see its work.</p>
+    </div>
+    <div class="wheel-row">
+      <div class="wheel-col">
+        <svg id="wheel" viewBox="0 0 520 520" role="group" aria-label="Interactive season wheel"></svg>
+      </div>
+      <div id="season-detail">
+        <div id="sd-rail"></div>
+        <h3 id="sd-name">&nbsp;</h3>
+        <p id="sd-timeline">&nbsp;</p>
+        <p id="sd-weather">&nbsp;</p>
+        <ul id="sd-actions"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="likhoeli" class="shell" data-reveal>
+  <div class="reveal">
+    <div class="section-head">
+      <p class="eyebrow">Likhoeli · Months</p>
+      <p class="sub">Each Sesotho month is named for what the fields, birds, and weather are doing.</p>
+    </div>
+    <div id="months-grid" class="grid months"></div>
+  </div>
+</section>
+
+<section id="khoeli" class="shell" data-reveal>
+  <div class="reveal">
+    <div class="section-head">
+      <p class="eyebrow">Khoeli · The Moon</p>
+      <h2>Planting by the light ea khoeli</h2>
+      <p class="sub">Traditional practice ties fieldwork to the moon's cycle. Offered here as cultural learning to be read alongside the rainfall calendar.</p>
+    </div>
+    <div class="grid moons">
+      <div class="card moon-card">
+        <h3 class="name">New moon</h3>
+        <span class="st">Khoeli e ncha</span>
+        <p class="body">The dark nights. The cycle's quiet beginning — rest the fields, mend tools, and turn the compost before sowing resumes with the returning light.</p>
+      </div>
+      <div class="card moon-card">
+        <h3 class="name">Waxing moon</h3>
+        <span class="st">Khoeli e ntseng e hōla</span>
+        <p class="body">The growing light. The traditional window for sowing seed and transplanting seedlings, as the month builds toward fullness.</p>
+      </div>
+      <div class="card moon-card">
+        <h3 class="name">Full moon</h3>
+        <span class="st">Khoeli e tletseng</span>
+        <p class="body">The bright nights. A time for gathering, community work, and checking fields — the veld is lit long after sunset.</p>
+      </div>
+      <div class="card moon-card">
+        <h3 class="name">Waning moon</h3>
+        <span class="st">Khoeli e fokotsehang</span>
+        <p class="body">The fading light. The traditional window for weeding, pruning, and harvesting for storage, as the month draws down.</p>
+      </div>
+    </div>
+    <div class="chips">
+      <span id="next-full">&nbsp;</span>
+      <span id="next-new">&nbsp;</span>
+    </div>
+    <p class="note"><strong>Litaba tsa setso:</strong> moon-phase planting is presented as indigenous practice and cultural heritage. Pair it with the seasonal rainfall guidance above, which remains the primary planting framework.</p>
+  </div>
+</section>
+
+<div class="beat" data-reveal>
+  <p class="reveal">What grows here has always grown here.</p>
+</div>
+
+<section id="lijalo" class="shell" data-reveal>
+  <div class="reveal">
+    <div class="section-head">
+      <p class="eyebrow">Lijalo · Crops</p>
+      <h2>A resilient portfolio for the Lowlands and Midlands</h2>
+      <p class="sub">Staples Basotho households actually plant, timed from national crop-calendar data, alongside nutrient-dense recoveries from the <em>Lost Crops of Africa</em> trilogy that spread the risk of a dry year.</p>
+    </div>
+    <div id="crops-grid" class="grid crops"></div>
+    <div class="key">
+      <span><i style="background:var(--gold); box-shadow:0 0 8px var(--gold);"></i>Planting window</span>
+      <span><i style="background:var(--ember); box-shadow:0 0 8px var(--ember);"></i>Harvest window</span>
+    </div>
+  </div>
+</section>
+
+<section id="print" data-reveal>
+  <div class="reveal inner">
+    <p class="eyebrow">Coming to print</p>
+    <h2>Printed Alemanaka Calendar</h2>
+    <p class="sub">A printed wall-calendar edition of this almanac is in production as a sample, to gather feedback from farmers and families before a wider run.</p>
+    <p class="status">Sample in production</p>
+  </div>
+</section>
+
+<footer>
+  <div class="inner">
+    <h3>Sources &amp; next steps</h3>
+    <p class="body">Crop guidance drawn from <em>Lost Crops of Africa</em>, Vols I–III (National Academies Press), the FAO–WFP Crop &amp; Food Supply Assessment for Lesotho, and FEWS NET / USDA crop calendars. Sesotho throughout uses Lesotho orthography.</p>
+    <p class="fine">Alemanaka — a cultural preservation project. Sample edition, 2026–27 growing year.</p>
+    <p class="sign">Created by Barefaced Media</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================================================
+     DATA
+     Edit these tables to change what the site shows. Month
+     indexes are calendar months with January = 0.
+     ============================================================ */
+
+  var DAY_MS = 86400000;
+
+  var SEASONS = [
+    {
+      id: "selemo", name: "Selemo", en: "Early Spring — Prep & Planting",
+      timeline: "August – mid-October", startDay: 0, endDay: 76, color: "#8bcf6a",
+      weather: "First erratic rains. Late-frost risk until mid-September. Soil warming.",
+      actions: [
+        "Open and prepare fields with minimum tillage",
+        "Plant drought-hardy summer crops after the first good rain",
+        "Watch for late frost — protect early seedlings",
+        "Start the perennial nursery (moringa, pigeon pea)"
+      ]
+    },
+    {
+      id: "lehlabula", name: "Lehlabula", en: "Main Summer Growth",
+      timeline: "mid-October – January", startDay: 76, endDay: 184, color: "#5fd9a6",
+      weather: "The hottest, wettest months. Peak growth — and peak pest pressure.",
+      actions: [
+        "Weed and mulch to hold moisture",
+        "Manage pests with natural controls",
+        "Harvest the first quick greens — theepe (amaranth) and lerotho (spider plant)",
+        "Keep watching the rains; replant gaps early"
+      ]
+    },
+    {
+      id: "kotulo", name: "Kotulo", en: "Peak Harvest & Storage",
+      timeline: "February – March", startDay: 184, endDay: 243, color: "#eab654",
+      weather: "Rains taper off. Mature crops dry standing in the field.",
+      actions: [
+        "Harvest, dry, and thresh grains and pulses",
+        "Move stores into airtight containers",
+        "Save seed from the strongest plants for next Selemo",
+        "Dry theepe leaves into powder for winter"
+      ]
+    },
+    {
+      id: "mariha", name: "Mariha", en: "Winter Rest & Planning",
+      timeline: "April – July", startDay: 243, endDay: 365, color: "#7fa8e6",
+      weather: "Cold and dry. Hard frosts; snow in the highlands.",
+      actions: [
+        "Grow winter-hardy crops — certain peas and garlic",
+        "Feed the soil: cover crops, manure, compost",
+        "Plan next season's fields and budget",
+        "Harvest saffron where established"
+      ]
+    }
+  ];
+
+  var MONTHS = [
+    { st: "Phato",      en: "August",    cal: 7,  season: "selemo",    meaning: "The land is opened — first ploughing as the soil begins to wake." },
+    { st: "Loetse",     en: "September", cal: 8,  season: "selemo",    meaning: "Softening rains arrive; seedbeds are readied for sowing." },
+    { st: "Mphalane",   en: "October",   cal: 9,  season: "selemo",    meaning: "Spring returns to the veld and the main sowing window opens." },
+    { st: "Pulungoana", en: "November",  cal: 10, season: "lehlabula", meaning: "Month of the young wildebeest — calving time, fields in full growth." },
+    { st: "Tšitoe",     en: "December",  cal: 11, season: "lehlabula", meaning: "The cicada (tšitoe) sings through the hottest days." },
+    { st: "Pherekhong", en: "January",   cal: 0,  season: "lehlabula", meaning: "Fires and sticks guard the ripening mabele from the birds." },
+    { st: "Hlakola",    en: "February",  cal: 1,  season: "kotulo",    meaning: "The sorghum wipes itself clean as the grain swells." },
+    { st: "Hlakubele",  en: "March",     cal: 2,  season: "kotulo",    meaning: "Grain shows red on the head — harvest draws near." },
+    { st: "'Mesa",      en: "April",     cal: 3,  season: "mariha",    meaning: "Fires are lit (ho besa) against the first cold." },
+    { st: "Motšeanong", en: "May",       cal: 4,  season: "mariha",    meaning: "The mabele laughs at the birds — too hard now to steal." },
+    { st: "Phuptjane",  en: "June",      cal: 5,  season: "mariha",    meaning: "The lesser digging — winter stores are drawn upon." },
+    { st: "Phupu",      en: "July",      cal: 6,  season: "mariha",    meaning: "The great digging of wild roots; the year turns toward spring." }
+  ];
+
+  var CROPS = [
+    { st: "Mabele", en: "Sorghum",
+      why: "The backbone grain of the Basotho table. Deep roots ride out dry spells that break maize, and the harvest stores for years.",
+      source: "Lost Crops of Africa, Vol I: Grains", plant: [9, 10], harvest: [1, 2] },
+    { st: "Poone", en: "Maize",
+      why: "The staple behind papa, and the crop most fields already carry. Planted with the first steady rains, left to dry down after the frost.",
+      source: "FEWS NET Lesotho / USDA crop calendar", plant: [9, 10, 11], harvest: [4, 5] },
+    { st: "Linaoa", en: "Dry beans (Phaseolus vulgaris)",
+      why: "Lesotho's leading legume — sown into warm soil once the rains settle, dried in the pod for the winter store.",
+      source: "FAO–WFP Crop & Food Supply Assessment, Lesotho", plant: [10, 11], harvest: [2, 3] },
+    { st: "Koro", en: "Winter wheat",
+      why: "The cold-season grain of the foothills and highlands: sown into moist autumn soil, harvested under the early-summer sun.",
+      source: "FEWS NET Lesotho / USDA crop calendar", plant: [4, 5], harvest: [10, 11] },
+    { st: "Erekisi", en: "Field peas",
+      why: "One of the country's five principal crops — a frost-tolerant stand-by that fills the fields the summer grains leave empty.",
+      source: "FAO–WFP Crop & Food Supply Assessment, Lesotho", plant: [6, 7], harvest: [10, 11] },
+    { st: "Litapole", en: "Potatoes",
+      why: "A smallholder favourite, especially in the cool highlands — bulking quietly underground while the summer storms pass over.",
+      source: "FAO–WFP Crop & Food Supply Assessment, Lesotho", plant: [8, 9, 10], harvest: [0, 1, 2] },
+    { st: "Mokopu", en: "Pumpkin",
+      why: "Planted among the maize the old way — leaves picked young as moroho, fruits cured whole to last deep into Mariha.",
+      source: "Local practice — intercropped with summer grain", plant: [9, 10], harvest: [2, 3, 4] },
+    { st: "Cowpea", en: "Vigna unguiculata",
+      why: "Protein for the plate, nitrogen for the soil. Intercropped with mabele it feeds the field that feeds you. Sesotho groups it with the beans as linaoa, so ask locally for the name your district uses.",
+      source: "Lost Crops of Africa, Vol II: Vegetables", plant: [9, 10, 11], harvest: [1, 2, 3] },
+    { st: "Theepe", en: "Amaranth",
+      why: "Cut-and-come-again greens richer than spinach, ready weeks after sowing. Dry the leaves into powder for winter.",
+      source: "Lost Crops of Africa, Vol II: Vegetables", plant: [8, 9, 10, 11, 0], harvest: [10, 11, 0, 1, 2] },
+    { st: "Lerotho", en: "Spider plant (Cleome)",
+      why: "A heat-loving traditional green that thrives where exotic vegetables wilt. Quick to harvest, quick to reseed.",
+      source: "Lost Crops of Africa, Vol II: Vegetables", plant: [9, 10, 11], harvest: [11, 0, 1, 2] },
+    { st: "Pigeon pea", en: "Cajanus cajan",
+      why: "A living fence that pays rent: protein-rich peas for three to five years while fixing nitrogen along your boundary.",
+      source: "Lost Crops of Africa, Vol I: Grains", plant: [9, 10], harvest: [3, 4, 5] },
+    { st: "Moringa", en: "Moringa oleifera",
+      why: "The perennial backbone. Fast-growing, with edible leaves and pods — plant once in Selemo, harvest for twenty years.",
+      source: "Supplementary source — use discretion", plant: [8, 9, 10], harvest: [0, 1, 2, 3] }
+  ];
+
+  /* ============================================================
+     SEASON + DATE HELPERS
+     The agricultural year runs 1 August to 31 July.
+     ============================================================ */
+
+  var now = new Date();
+
+  function agriDayOfYear(d) {
+    var y = d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1;
+    var start = new Date(y, 7, 1);
+    return Math.min(364, Math.floor((d - start) / DAY_MS));
+  }
+
+  function currentSeason(d) {
+    var day = agriDayOfYear(d);
+    for (var i = 0; i < SEASONS.length; i++) {
+      if (day >= SEASONS[i].startDay && day < SEASONS[i].endDay) return SEASONS[i];
+    }
+    return SEASONS[SEASONS.length - 1];
+  }
+
+  function fmtDate(d) {
+    return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  }
+  function fmtShort(d) {
+    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  }
+
+  /* ============================================================
+     MOON
+     Synodic-month approximation from a known new moon. Accurate
+     to within a few hours, which is plenty for a calendar.
+     ============================================================ */
+
+  var SYNODIC = 29.530588853;
+  var NEW_MOON_EPOCH = Date.UTC(2000, 0, 6, 18, 14, 0);
+
+  function moonAge(d) {
+    var age = ((d.getTime() - NEW_MOON_EPOCH) / DAY_MS) % SYNODIC;
+    return age < 0 ? age + SYNODIC : age;
+  }
+  function moonPhaseFraction(d) { return moonAge(d) / SYNODIC; }
+  function moonIllumination(p) { return (1 - Math.cos(2 * Math.PI * p)) / 2; }
+
+  function phaseName(p) {
+    if (p < 0.033 || p > 0.967) return { st: "Khoeli e ncha", en: "New moon" };
+    if (p < 0.22)  return { st: "Khoeli e ntseng e hōla", en: "Waxing crescent" };
+    if (p < 0.28)  return { st: "Kotara ea pele", en: "First quarter" };
+    if (p < 0.47)  return { st: "Khoeli e ntseng e hōla", en: "Waxing gibbous" };
+    if (p < 0.53)  return { st: "Khoeli e tletseng", en: "Full moon" };
+    if (p < 0.72)  return { st: "Khoeli e fokotsehang", en: "Waning gibbous" };
+    if (p < 0.78)  return { st: "Kotara ea ho qetela", en: "Last quarter" };
+    return { st: "Khoeli e fokotsehang", en: "Waning crescent" };
+  }
+
+  // Southern-Hemisphere moon: a waxing moon lights from the LEFT limb,
+  // which is how it appears over the Maloti. Do not mirror this.
+  function moonLitPath(cx, cy, r, p) {
+    var c = Math.cos(2 * Math.PI * p);
+    var rx = Math.abs(c) * r;
+    var top = cx + " " + (cy - r);
+    var bottom = cx + " " + (cy + r);
+    if (p <= 0.5) {
+      var sweepA = c >= 0 ? 1 : 0;
+      return "M " + top + " A " + r + " " + r + " 0 0 0 " + bottom +
+             " A " + rx + " " + r + " 0 0 " + sweepA + " " + top + " Z";
+    }
+    var sweepB = c < 0 ? 1 : 0;
+    return "M " + top + " A " + r + " " + r + " 0 0 1 " + bottom +
+           " A " + rx + " " + r + " 0 0 " + sweepB + " " + top + " Z";
+  }
+
+  function nextPhaseDate(from, target) {
+    var cycles = (from.getTime() - NEW_MOON_EPOCH) / DAY_MS / SYNODIC;
+    return new Date(NEW_MOON_EPOCH + (Math.floor(cycles - target) + 1 + target) * SYNODIC * DAY_MS);
+  }
+
+  /* ============================================================
+     GEOMETRY
+     ============================================================ */
+
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  var CX = 260, CY = 260, R = 190;
+
+  function polar(cx, cy, r, deg) {
+    var a = (deg - 90) * Math.PI / 180;
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  }
+  function ringArc(a0, a1, r) {
+    var large = a1 - a0 > 180 ? 1 : 0;
+    var p1 = polar(CX, CY, r, a0), p2 = polar(CX, CY, r, a1);
+    return "M " + p1.join(" ") + " A " + r + " " + r + " 0 " + large + " 1 " + p2.join(" ");
+  }
+  function dayToAngle(day) { return (day / 365) * 360; }
+
+  function el(tag, attrs) {
+    var node = document.createElementNS(SVG_NS, tag);
+    for (var k in attrs) if (attrs.hasOwnProperty(k)) node.setAttribute(k, attrs[k]);
+    return node;
+  }
+
+  /* ============================================================
+     RENDER — hero and moon
+     ============================================================ */
+
+  var season = currentSeason(now);
+
+  document.getElementById("today-date").textContent = fmtDate(now);
+  document.getElementById("season-chip").textContent =
+    season.name + " · " + season.en.split("—")[0].trim();
+  var dot = document.getElementById("season-dot");
+  dot.style.background = season.color;
+  dot.style.boxShadow = "0 0 8px " + season.color;
+
+  var phase = moonPhaseFraction(now);
+  var pn = phaseName(phase);
+  document.getElementById("moon-lit").setAttribute("d", moonLitPath(75, 75, 60, phase));
+  document.getElementById("phase-name").textContent = pn.st;
+  document.getElementById("phase-detail").textContent =
+    pn.en + " · " + Math.round(moonIllumination(phase) * 100) + "% lit · day " +
+    Math.round(moonAge(now)) + " of 30";
+  document.getElementById("next-full").textContent =
+    "Khoeli e tletseng: " + fmtShort(nextPhaseDate(now, 0.5));
+  document.getElementById("next-new").textContent =
+    "Khoeli e ncha: " + fmtShort(nextPhaseDate(now, 0));
+
+  /* ============================================================
+     RENDER — starfield
+     ============================================================ */
+
+  (function () {
+    var shadows = [];
+    for (var i = 0; i < 140; i++) {
+      var x = Math.round(Math.random() * 100);
+      var y = Math.round(Math.random() * 100);
+      var size = Math.random() > 0.85 ? 1 : 0;
+      var op = (0.25 + Math.random() * 0.6).toFixed(2);
+      shadows.push(x + "vw " + y + "vh 0 " + size + "px rgba(230,225,245," + op + ")");
+    }
+    document.getElementById("stars").style.boxShadow = shadows.join(",");
+  })();
+
+  /* ============================================================
+     RENDER — season wheel
+     ============================================================ */
+
+  var wheel = document.getElementById("wheel");
+  var selectedId = season.id;
+
+  function paintDetail(s) {
+    document.getElementById("sd-name").textContent = s.name + " — " + s.en;
+    document.getElementById("sd-timeline").textContent = s.timeline;
+    document.getElementById("sd-weather").textContent = s.weather;
+    var rail = document.getElementById("sd-rail");
+    rail.style.background = s.color;
+    rail.style.boxShadow = "0 0 12px " + s.color;
+    var ul = document.getElementById("sd-actions");
+    ul.textContent = "";
+    s.actions.forEach(function (a) {
+      var li = document.createElement("li");
+      li.textContent = a;
+      ul.appendChild(li);
+    });
+  }
+
+  function arcStyle(node, s, isSelected) {
+    node.setAttribute("stroke", s.color);
+    node.setAttribute("stroke-width", isSelected ? 15 : 9);
+    node.setAttribute("opacity", isSelected ? 1 : 0.45);
+    node.style.filter = isSelected ? "drop-shadow(0 0 20px " + s.color + ")" : "none";
+  }
+
+  function drawWheel() {
+    wheel.textContent = "";
+
+    wheel.appendChild(el("circle", {
+      cx: CX, cy: CY, r: 235, fill: "none",
+      stroke: "rgba(242,238,224,0.1)", "stroke-width": 1, "stroke-dasharray": "1 7"
+    }));
+
+    var sel = SEASONS.filter(function (s) { return s.id === selectedId; })[0] || season;
+    var glow = el("circle", { cx: CX, cy: CY, r: 95, fill: sel.color, opacity: 0.16 });
+    glow.style.filter = "blur(30px)";
+    wheel.appendChild(glow);
+
+    var startDays = [0, 31, 61, 92, 122, 153, 184, 212, 243, 273, 304, 334];
+    startDays.forEach(function (d) {
+      var p = polar(CX, CY, R, dayToAngle(d));
+      wheel.appendChild(el("circle", { cx: p[0], cy: p[1], r: 1.6, fill: "rgba(242,238,224,0.4)" }));
+    });
+
+    SEASONS.forEach(function (s) {
+      var isSelected = s.id === selectedId;
+      var arc = el("path", {
+        d: ringArc(dayToAngle(s.startDay) + 2, dayToAngle(s.endDay) - 2, R),
+        fill: "none",
+        "stroke-linecap": "round",
+        tabindex: "0",
+        role: "button",
+        "aria-label": s.name + ", " + s.en + ", " + s.timeline
+      });
+      arc.setAttribute("class", "arc");
+      arcStyle(arc, s, isSelected);
+
+      function choose() {
+        selectedId = s.id;
+        paintDetail(s);
+        drawWheel();
+      }
+      arc.addEventListener("click", choose);
+      arc.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(); }
+      });
+      arc.addEventListener("mouseenter", function () { arcStyle(arc, s, true); });
+      arc.addEventListener("mouseleave", function () { arcStyle(arc, s, s.id === selectedId); });
+      wheel.appendChild(arc);
+    });
+
+    SEASONS.forEach(function (s) {
+      var mid = (dayToAngle(s.startDay) + dayToAngle(s.endDay)) / 2;
+      var p = polar(CX, CY, R + 32, mid);
+      var t = el("text", {
+        x: p[0], y: p[1], "text-anchor": "middle", "dominant-baseline": "middle",
+        fill: "rgba(242,238,224,0.8)", "font-family": "'Courier New',monospace",
+        "font-size": 12, "letter-spacing": "0.1em"
+      });
+      t.style.pointerEvents = "none";
+      t.style.textTransform = "uppercase";
+      t.textContent = s.name;
+      wheel.appendChild(t);
+    });
+
+    var todayPos = polar(CX, CY, R, dayToAngle(agriDayOfYear(now)));
+    wheel.appendChild(el("circle", {
+      cx: todayPos[0], cy: todayPos[1], r: 9, fill: "none",
+      stroke: "#e2604a", "stroke-width": 1.5, opacity: 0.5
+    }));
+    var todayDot = el("circle", { cx: todayPos[0], cy: todayPos[1], r: 4, fill: "#e2604a" });
+    todayDot.style.filter = "drop-shadow(0 0 8px #e2604a)";
+    wheel.appendChild(todayDot);
+
+    var c1 = el("text", {
+      x: CX, y: 252, "text-anchor": "middle", fill: "#f2eee0",
+      "font-family": "Georgia,serif", "font-size": 26, "font-weight": 600
+    });
+    c1.textContent = season.name;
+    wheel.appendChild(c1);
+
+    var c2 = el("text", {
+      x: CX, y: 278, "text-anchor": "middle", fill: "rgba(242,238,224,0.6)",
+      "font-family": "'Courier New',monospace", "font-size": 11, "letter-spacing": "0.1em"
+    });
+    c2.textContent = "kajeno · today";
+    wheel.appendChild(c2);
+  }
+
+  paintDetail(season);
+  drawWheel();
+
+  /* ============================================================
+     RENDER — months
+     ============================================================ */
+
+  var seasonColor = {};
+  SEASONS.forEach(function (s) { seasonColor[s.id] = s.color; });
+
+  var monthsGrid = document.getElementById("months-grid");
+  MONTHS.forEach(function (m) {
+    var isNow = m.cal === now.getMonth();
+    var card = document.createElement("div");
+    card.className = "card" + (isNow ? " current" : "");
+
+    var band = document.createElement("span");
+    band.className = "band";
+    band.style.background = seasonColor[m.season];
+    band.style.boxShadow = "0 0 8px " + seasonColor[m.season];
+    card.appendChild(band);
+
+    var en = document.createElement("span");
+    en.className = "label";
+    en.textContent = m.en;
+    card.appendChild(en);
+
+    var st = document.createElement("span");
+    st.className = "name";
+    st.textContent = m.st;
+    card.appendChild(st);
+
+    var meaning = document.createElement("span");
+    meaning.className = "body";
+    meaning.textContent = m.meaning;
+    card.appendChild(meaning);
+
+    if (isNow) {
+      var tag = document.createElement("span");
+      tag.className = "now-tag";
+      tag.textContent = "this month";
+      card.appendChild(tag);
+    }
+    monthsGrid.appendChild(card);
+  });
+
+  /* ============================================================
+     RENDER — crops
+     ============================================================ */
+
+  var STRIP = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+  var MONTH_FULL = ["January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"];
+  var cropsGrid = document.getElementById("crops-grid");
+
+  CROPS.forEach(function (c) {
+    var card = document.createElement("div");
+    card.className = "card";
+
+    var name = document.createElement("div");
+    name.className = "name";
+    name.textContent = c.st;
+    card.appendChild(name);
+
+    var en = document.createElement("div");
+    en.className = "label";
+    en.textContent = c.en;
+    card.appendChild(en);
+
+    var why = document.createElement("div");
+    why.className = "body";
+    why.style.flex = "1";
+    why.textContent = c.why;
+    card.appendChild(why);
+
+    var strip = document.createElement("div");
+    strip.className = "strip";
+    for (var i = 0; i < 12; i++) {
+      var cell = document.createElement("span");
+      var state = "";
+      if (c.plant.indexOf(i) !== -1) { cell.className = "cell plant"; state = "planting"; }
+      else if (c.harvest.indexOf(i) !== -1) { cell.className = "cell harvest"; state = "harvest"; }
+      else { cell.className = "cell"; }
+      if (state) cell.title = MONTH_FULL[i] + " — " + state;
+      strip.appendChild(cell);
+    }
+    card.appendChild(strip);
+
+    var labels = document.createElement("div");
+    labels.className = "strip-months";
+    labels.setAttribute("aria-hidden", "true");
+    STRIP.forEach(function (l) {
+      var s = document.createElement("span");
+      s.textContent = l;
+      labels.appendChild(s);
+    });
+    card.appendChild(labels);
+
+    var months = c.plant.map(function (i) { return MONTH_FULL[i]; }).join(", ");
+    var harvestMonths = c.harvest.map(function (i) { return MONTH_FULL[i]; }).join(", ");
+    strip.setAttribute("role", "img");
+    strip.setAttribute("aria-label", "Plant in " + months + ". Harvest in " + harvestMonths + ".");
+
+    var src = document.createElement("div");
+    src.className = "source";
+    src.textContent = c.source;
+    card.appendChild(src);
+
+    cropsGrid.appendChild(card);
+  });
+
+  /* ============================================================
+     SCROLL BEHAVIOUR — reveals and active nav
+     ============================================================ */
+
+  var revealTargets = document.querySelectorAll("[data-reveal]");
+
+  function revealAll() {
+    Array.prototype.forEach.call(revealTargets, function (t) { t.classList.add("shown"); });
+  }
+
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add("shown");
+          io.unobserve(e.target);
+        }
+      });
+    }, { rootMargin: "0px 0px -25% 0px", threshold: 0 });
+    Array.prototype.forEach.call(revealTargets, function (t) { io.observe(t); });
+
+    // Safety net: if anything goes wrong, show all content rather than hide it.
+    setTimeout(revealAll, 3000);
+
+    var links = document.querySelectorAll(".dock a");
+    var navIo = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        Array.prototype.forEach.call(links, function (a) {
+          a.classList.toggle("active", a.getAttribute("href") === "#" + e.target.id);
+        });
+      });
+    }, { rootMargin: "-40% 0px -50% 0px", threshold: 0 });
+    ["lihla", "likhoeli", "khoeli", "lijalo"].forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node) navIo.observe(node);
+    });
+  } else {
+    revealAll();
+  }
+})();
+</script>
+</body>
+</html>

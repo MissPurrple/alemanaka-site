@@ -1,0 +1,13 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Build/design-tool artifacts — the source of truth is index.html
+*.bundle.html
+node_modules/
