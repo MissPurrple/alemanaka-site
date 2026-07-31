@@ -467,17 +467,19 @@ section, .beat { position: relative; z-index: 1; }
   border-bottom: 1px solid var(--edge);
   margin-bottom: 14px;
 }
-.mc-months { display: grid; grid-template-columns: repeat(12, 1fr); }
+/* Labels sit at their true date positions, not in twelve equal columns —
+   months are unequal, and the moons drift against them by a day or two. */
+.mc-months { position: relative; height: 1.2em; }
 .mc-months span {
+  position: absolute;
   font-family: var(--mono);
   font-size: 0.68rem;
   letter-spacing: 0.04em;
   color: var(--text-mute);
   text-align: center;
-  border-left: 1px solid rgba(242, 238, 224, 0.1);
-  padding-bottom: 2px;
+  overflow: hidden;
+  white-space: nowrap;
 }
-.mc-months span:first-child { border-left: 0; }
 .mc-axis-label {
   font-family: var(--mono);
   font-size: 0.68rem;
@@ -494,7 +496,22 @@ section, .beat { position: relative; z-index: 1; }
   padding: 5px 0;
 }
 .mc-row:hover .mc-bar { filter: brightness(1.25); }
+.mc-row.current {
+  background: rgba(232, 179, 74, 0.07);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(232, 179, 74, 0.35);
+}
+.mc-row.current .mc-name { color: var(--gold-lift); }
 .mc-name { font-family: var(--serif); font-size: 0.95rem; line-height: 1.3; }
+.mc-now-tag {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-lift);
+}
 .mc-name small {
   display: block;
   font-family: var(--mono);
@@ -505,11 +522,8 @@ section, .beat { position: relative; z-index: 1; }
 .mc-track {
   position: relative;
   height: 22px;
-  background:
-    repeating-linear-gradient(to right,
-      rgba(242,238,224,0.09) 0 1px,
-      transparent 1px calc(100% / 12));
   border-radius: 4px;
+  /* Month gridlines are painted from real dates in script. */
 }
 .mc-bar {
   position: absolute;
@@ -1801,29 +1815,58 @@ window.ALEMANAKA_FEEDBACK = {
 
   (function () {
     var year = moonCyclesFor(now);
-    var axisStart = year.gregorianStart.getTime();
-    var axisEnd = new Date(year.gregorianEnd.getFullYear(), 6, 31, 23, 59, 59).getTime();
+    var cycles = year.cycles;
+
+    // The axis stretches to hold whatever the moons actually need. The first
+    // moon of the year rises in late July, before the Gregorian year turns,
+    // and that overhang is the point — so it must not be cropped away.
+    var gregStart = year.gregorianStart.getTime();
+    var gregEnd = new Date(year.gregorianEnd.getFullYear(), 6, 31, 23, 59, 59).getTime();
+    var axisStart = Math.min(gregStart, cycles[0].start.getTime());
+    var axisEnd = Math.max(gregEnd, cycles[cycles.length - 1].end.getTime());
     var span = axisEnd - axisStart;
 
     function pct(t) {
       return Math.max(0, Math.min(100, ((t - axisStart) / span) * 100));
     }
 
-    // Month labels across the top, in agricultural-year order.
+    // Real month boundaries, so labels and gridlines land on actual dates
+    // rather than twelve equal slices of the year.
+    var bounds = MONTHS.map(function (m) {
+      var y = year.gregorianStart.getFullYear() + (m.cal >= 7 ? 0 : 1);
+      var from = new Date(y, m.cal, 1);
+      var to = new Date(m.cal === 11 ? y + 1 : y, (m.cal + 1) % 12, 1);
+      return { m: m, from: pct(from.getTime()), to: pct(to.getTime()) };
+    });
+
     var axis = document.getElementById("mc-months");
-    MONTHS.forEach(function (m) {
+    bounds.forEach(function (b) {
       var s = document.createElement("span");
       // Five characters, so Phuptjane and Phupu stay distinguishable.
-      s.textContent = m.st.slice(0, 5);
-      s.title = m.st + " · " + m.en;
+      s.textContent = b.m.st.slice(0, 5);
+      s.title = b.m.st + " · " + b.m.en;
+      s.style.left = b.from + "%";
+      s.style.width = (b.to - b.from) + "%";
       axis.appendChild(s);
     });
+
+    // One gradient, reused by every row, with a hairline at each month start.
+    var stops = ["transparent 0%"];
+    bounds.forEach(function (b) {
+      if (b.from <= 0) return;
+      stops.push("transparent " + b.from + "%");
+      stops.push("rgba(242,238,224,0.12) " + b.from + "%");
+      stops.push("rgba(242,238,224,0.12) calc(" + b.from + "% + 1px)");
+      stops.push("transparent calc(" + b.from + "% + 1px)");
+    });
+    stops.push("transparent 100%");
+    var gridline = "linear-gradient(to right, " + stops.join(", ") + ")";
 
     var rows = document.getElementById("mc-rows");
     var seasonOf = {};
     SEASONS.forEach(function (s) { seasonOf[s.id] = s.color; });
 
-    year.cycles.forEach(function (c, i) {
+    cycles.forEach(function (c, i) {
       var row = document.createElement("div");
       row.className = "mc-row";
 
@@ -1837,6 +1880,7 @@ window.ALEMANAKA_FEEDBACK = {
 
       var track = document.createElement("div");
       track.className = "mc-track";
+      track.style.backgroundImage = gridline;
 
       var bar = document.createElement("div");
       bar.className = "mc-bar";
@@ -1852,6 +1896,12 @@ window.ALEMANAKA_FEEDBACK = {
 
       // Mark today on whichever cycle currently holds it.
       if (now >= c.start && now < c.end) {
+        row.className = "mc-row current";
+        var tag = document.createElement("span");
+        tag.className = "mc-now-tag";
+        tag.textContent = "khoeli ena · this moon";
+        label.appendChild(tag);
+
         var mark = document.createElement("div");
         mark.className = "mc-today";
         mark.style.left = pct(now.getTime()) + "%";
@@ -1863,11 +1913,11 @@ window.ALEMANAKA_FEEDBACK = {
       rows.appendChild(row);
     });
 
-    var n = year.cycles.length;
+    var n = cycles.length;
     var startY = year.gregorianStart.getFullYear();
     document.getElementById("moons-intro").textContent =
       "Khoeli means both moon and month. This year the land turns through " + n +
-      " full moons, the first rising on " + fmtDate(year.cycles[0].start) +
+      " full moons, the first rising on " + fmtDate(cycles[0].start) +
       ". Each bar below is one moon, laid over the Gregorian months so you can " +
       "read your own calendar against the older one.";
 
