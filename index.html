@@ -135,6 +135,52 @@ button:focus-visible {
 }
 .brand:hover { color: var(--cream); }
 
+/* ---------- Sound ----------
+   The player itself is offscreen; this button is the whole interface to it.
+   Audio never starts on its own: browsers block that, and a page that makes
+   noise uninvited is rude besides. */
+.sound {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--edge);
+  background: rgba(10, 12, 22, 0.72);
+  backdrop-filter: blur(10px);
+  color: var(--text-mute);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.sound:hover { color: var(--text); background: rgba(255, 255, 255, 0.08); }
+.sound[aria-pressed="true"] { color: var(--gold-lift); border-color: rgba(232, 179, 74, 0.45); }
+.sound svg { width: 15px; height: 15px; flex: none; }
+.sound .wave { transition: opacity 0.2s ease; opacity: 0; }
+.sound[aria-pressed="true"] .wave { opacity: 1; }
+.sound .slash { opacity: 1; }
+.sound[aria-pressed="true"] .slash { opacity: 0; }
+.sound .label { display: none; }
+@media (min-width: 720px) { .sound .label { display: inline; } }
+
+#sc-player {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  border: 0;
+  pointer-events: none;
+}
+
 .dock {
   position: fixed;
   bottom: 18px;
@@ -871,6 +917,22 @@ footer .sign {
 
 <a class="brand" href="#top">Alemanaka</a>
 
+<button class="sound" id="sound-btn" type="button" aria-pressed="false"
+        aria-label="Play background music: Hae by Rosem" hidden>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M11 5 6 9H3v6h3l5 4V5z"></path>
+    <g class="wave"><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 6a9 9 0 0 1 0 12"></path></g>
+    <path class="slash" d="M16 9l5 6M21 9l-5 6"></path>
+  </svg>
+  <span class="label" id="sound-label">Sound off</span>
+</button>
+
+<!-- Streamed from SoundCloud's own player, so plays reach the artist. -->
+<iframe id="sc-player" title="Background music player" tabindex="-1" aria-hidden="true"
+        allow="autoplay"
+        src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Frosem-sc%2Fhae&amp;auto_play=false&amp;hide_related=true&amp;show_comments=false&amp;show_user=false&amp;show_teaser=false&amp;visual=false"></iframe>
+
 <nav class="dock" aria-label="Sections">
   <a href="#lihla">Seasons</a>
   <a href="#likhoeli">Months</a>
@@ -1207,6 +1269,90 @@ window.ALEMANAKA_FEEDBACK = {
   // Turnstile SITE key (dashboard > Turnstile > Add site) before launch.
   turnstileKey: "1x00000000000000000000AA"
 };
+</script>
+<script src="https://w.soundcloud.com/player/api.js" async defer></script>
+<script>
+/* ============================================================
+   BACKGROUND MUSIC — "Hae" by Rosem, on loop.
+
+   Never starts by itself. Every browser blocks audio that begins
+   without a gesture, and a page that makes noise uninvited is rude
+   anyway. The button is the only way it plays, and the choice is
+   remembered so a returning reader is not asked twice.
+
+   If SoundCloud is blocked or slow, the button stays hidden rather
+   than sitting there doing nothing.
+   ============================================================ */
+(function () {
+  "use strict";
+
+  var btn = document.getElementById("sound-btn");
+  var label = document.getElementById("sound-label");
+  var frame = document.getElementById("sc-player");
+  var STORE = "alemanaka-sound";
+  var widget = null;
+  var playing = false;
+
+  function paint() {
+    btn.setAttribute("aria-pressed", playing ? "true" : "false");
+    label.textContent = playing ? "Sound on" : "Sound off";
+    btn.setAttribute("aria-label",
+      (playing ? "Mute" : "Play") + " background music: Hae by Rosem");
+  }
+
+  function ready() {
+    if (!window.SC || !SC.Widget) return;
+    widget = SC.Widget(frame);
+
+    widget.bind(SC.Widget.Events.READY, function () {
+      btn.hidden = false;
+      widget.setVolume(55);
+
+      // Loop: SoundCloud does not repeat a single track on its own.
+      widget.bind(SC.Widget.Events.FINISH, function () {
+        widget.seekTo(0);
+        if (playing) widget.play();
+      });
+
+      // A reader who turned it on last time gets it back, but only once
+      // they touch the page — the gesture the browser insists on.
+      if (localStorage.getItem(STORE) === "on") {
+        var resume = function () {
+          document.removeEventListener("pointerdown", resume);
+          document.removeEventListener("keydown", resume);
+          if (!playing) { playing = true; widget.play(); paint(); }
+        };
+        document.addEventListener("pointerdown", resume, { once: true });
+        document.addEventListener("keydown", resume, { once: true });
+      }
+    });
+
+    widget.bind(SC.Widget.Events.PLAY,  function () { playing = true;  paint(); });
+    widget.bind(SC.Widget.Events.PAUSE, function () { playing = false; paint(); });
+
+    btn.addEventListener("click", function () {
+      if (playing) {
+        widget.pause();
+        playing = false;
+        try { localStorage.setItem(STORE, "off"); } catch (e) {}
+      } else {
+        widget.play();
+        playing = true;
+        try { localStorage.setItem(STORE, "on"); } catch (e) {}
+      }
+      paint();
+    });
+
+    paint();
+  }
+
+  // The API script is async; wait for it, but give up rather than hang.
+  var waited = 0;
+  var poll = setInterval(function () {
+    if (window.SC && SC.Widget) { clearInterval(poll); ready(); }
+    else if ((waited += 200) > 8000) { clearInterval(poll); }
+  }, 200);
+})();
 </script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 <script>
