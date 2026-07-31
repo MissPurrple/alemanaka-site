@@ -27,6 +27,11 @@ const SECTIONS = [
   "The Sesotho", "The printed calendar", "Something else"
 ];
 
+// What the person is bringing. Kept apart because they need different
+// answers: advice is weighed, additions are checked and folded in, requests
+// and questions are replied to.
+const KINDS = ["keletso", "litlatsetso", "likopo"];
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -76,6 +81,7 @@ async function submit(request, env) {
   const email = str(payload.email).toLowerCase();
   const body = str(payload.body).slice(0, MAX_BODY);
   const section = SECTIONS.includes(str(payload.section)) ? str(payload.section) : null;
+  const kind = KINDS.includes(str(payload.kind)) ? str(payload.kind) : "keletso";
 
   // Honeypot: a field hidden from people, irresistible to naive bots.
   if (str(payload.website)) return json({ ok: true }, 200, origin, env);
@@ -110,10 +116,10 @@ async function submit(request, env) {
   const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
 
   await env.DB.prepare(
-    `INSERT INTO suggestions (id, created_at, status, name, email, section, body, ip_hash, user_agent, verify_token)
-     VALUES (?, ?, 'unverified', ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO suggestions (id, created_at, status, name, email, kind, section, body, ip_hash, user_agent, verify_token)
+     VALUES (?, ?, 'unverified', ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(
-    id, new Date().toISOString(), name, email, section, body,
+    id, new Date().toISOString(), name, email, kind, section, body,
     ipHash, str(request.headers.get("User-Agent")).slice(0, 300), token
   ).run();
 
@@ -259,10 +265,18 @@ async function adminList(request, env) {
   const valid = ["new", "accepted", "declined", "spam"];
   if (!valid.includes(status)) return json({ error: "Unknown status" }, 400);
 
-  const { results } = await env.DB.prepare(
-    `SELECT id, created_at, verified_at, status, name, email, section, body, ip_hash, review_note
-       FROM suggestions WHERE status = ? ORDER BY created_at DESC LIMIT 200`
-  ).bind(status).all();
+  const kindFilter = str(url.searchParams.get("kind"));
+  const byKind = KINDS.includes(kindFilter);
+
+  const { results } = byKind
+    ? await env.DB.prepare(
+        `SELECT id, created_at, verified_at, status, name, email, kind, section, body, ip_hash, review_note
+           FROM suggestions WHERE status = ? AND kind = ? ORDER BY created_at DESC LIMIT 200`
+      ).bind(status, kindFilter).all()
+    : await env.DB.prepare(
+        `SELECT id, created_at, verified_at, status, name, email, kind, section, body, ip_hash, review_note
+           FROM suggestions WHERE status = ? ORDER BY created_at DESC LIMIT 200`
+      ).bind(status).all();
 
   // Context that makes manufactured consensus visible: how many other
   // suggestions share this email, and how many share this network.
@@ -288,7 +302,16 @@ async function adminList(request, env) {
     counts[s] = c ? c.n : 0;
   }
 
-  return json({ rows, counts });
+  // How the current queue breaks down by kind, for the filter chips.
+  const kindCounts = {};
+  for (const k of KINDS) {
+    const c = await env.DB.prepare(
+      "SELECT COUNT(*) AS n FROM suggestions WHERE status = ? AND kind = ?"
+    ).bind(status, k).first();
+    kindCounts[k] = c ? c.n : 0;
+  }
+
+  return json({ rows, counts, kindCounts });
 }
 
 async function adminReview(request, env) {

@@ -14,6 +14,13 @@ CREATE TABLE IF NOT EXISTS suggestions (
 
   name          TEXT NOT NULL,
   email         TEXT NOT NULL,
+
+  -- What the person is bringing:
+  --   keletso     : advice
+  --   litlatsetso : additions
+  --   likopo      : requests and questions
+  kind          TEXT NOT NULL DEFAULT 'keletso',
+
   section       TEXT,
   body          TEXT NOT NULL,
 
@@ -29,6 +36,7 @@ CREATE TABLE IF NOT EXISTS suggestions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_suggestions_status  ON suggestions(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_suggestions_kind    ON suggestions(kind, status);
 CREATE INDEX IF NOT EXISTS idx_suggestions_email   ON suggestions(email);
 CREATE INDEX IF NOT EXISTS idx_suggestions_ip      ON suggestions(ip_hash);
 CREATE INDEX IF NOT EXISTS idx_suggestions_token   ON suggestions(verify_token);

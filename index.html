@@ -768,6 +768,52 @@ footer .sign {
 .field .hint { font-size: 0.78rem; color: var(--text-mute); }
 .field select option { background: #101733; color: var(--text); }
 
+/* Kind-of-contribution chips. Real radios underneath, so they work with a
+   keyboard and announce themselves properly. */
+.kinds { display: flex; flex-wrap: wrap; gap: 8px; }
+.kind { position: relative; flex: 1 1 auto; }
+.kind input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+.kind label {
+  display: block;
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--edge);
+  background: rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.kind label .st {
+  display: block;
+  font-family: var(--serif);
+  font-size: 0.98rem;
+  line-height: 1.25;
+}
+.kind label .en {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  margin-top: 2px;
+}
+.kind input:hover + label { background: rgba(255, 255, 255, 0.06); }
+.kind input:checked + label {
+  border-color: var(--gold);
+  background: rgba(232, 179, 74, 0.12);
+  color: var(--gold-lift);
+}
+.kind input:checked + label .en { color: var(--gold); }
+.kind input:focus-visible + label { outline: 2px solid var(--gold-lift); outline-offset: 2px; }
+
 /* Honeypot — hidden from people, tempting to naive bots. */
 .trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
@@ -1068,8 +1114,26 @@ footer .sign {
       <h2 id="suggest-title">Fana ka keletso · Share your advice</h2>
       <p class="lede">Say it however you like — a sentence is plenty. We'll email you a link to confirm it's really you, then it goes to be read.</p>
 
+      <fieldset class="field" style="border:0; padding:0; margin:0 0 18px;">
+        <legend class="field" style="padding:0; margin:0 0 7px; font-family:var(--mono); font-size:0.76rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-mute);">What are you bringing?</legend>
+        <div class="kinds">
+          <span class="kind">
+            <input type="radio" id="k-keletso" name="kind" value="keletso" checked>
+            <label for="k-keletso"><span class="st">Keletso</span><span class="en">Advice</span></label>
+          </span>
+          <span class="kind">
+            <input type="radio" id="k-litlatsetso" name="kind" value="litlatsetso">
+            <label for="k-litlatsetso"><span class="st">Litlatsetso</span><span class="en">Additions</span></label>
+          </span>
+          <span class="kind">
+            <input type="radio" id="k-likopo" name="kind" value="likopo">
+            <label for="k-likopo"><span class="st">Likōpo le lipotso</span><span class="en">Requests &amp; questions</span></label>
+          </span>
+        </div>
+      </fieldset>
+
       <div class="field">
-        <label for="f-body">Your suggestion</label>
+        <label for="f-body">Your message</label>
         <textarea id="f-body" name="body" required maxlength="4000"
           placeholder="I wish this was better because…"></textarea>
       </div>
@@ -1185,6 +1249,24 @@ window.ALEMANAKA_FEEDBACK = {
     if (lastFocused && lastFocused.focus) lastFocused.focus();
   }
 
+  // The prompt follows whichever kind is chosen, so the box asks for the
+  // thing the person actually came to give.
+  var PROMPTS = {
+    keletso:     "The planting window for mabele is later where I farm…",
+    litlatsetso: "My grandmother called this month…",
+    likopo:      "Could you add the highlands planting dates?"
+  };
+  Array.prototype.forEach.call(document.querySelectorAll("input[name=kind]"), function (r) {
+    r.addEventListener("change", function () {
+      document.getElementById("f-body").placeholder = PROMPTS[r.value] || "";
+    });
+  });
+
+  function selectedKind() {
+    var r = document.querySelector("input[name=kind]:checked");
+    return r ? r.value : "keletso";
+  }
+
   Array.prototype.forEach.call(document.querySelectorAll("[data-open-suggest]"), function (b) {
     b.addEventListener("click", function () { open(b.getAttribute("data-section")); });
   });
@@ -1251,6 +1333,7 @@ window.ALEMANAKA_FEEDBACK = {
         name: name,
         email: email,
         body: body,
+        kind: selectedKind(),
         section: document.getElementById("f-section").value,
         website: document.getElementById("f-website").value,
         turnstileToken: token

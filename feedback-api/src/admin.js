@@ -40,6 +40,17 @@ export const ADMIN_PAGE = `<!DOCTYPE html>
   .who{font-family:var(--sans);font-size:.95rem;color:var(--ink);font-weight:600}
   .tag{padding:3px 10px;border-radius:999px;border:1px solid var(--edge);font-size:.7rem;letter-spacing:.06em}
   .tag.section{color:var(--gold);border-color:rgba(232,179,74,.4)}
+  .tag.kind{font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .tag.kind.keletso{color:#e8b34a;border-color:rgba(232,179,74,.5);background:rgba(232,179,74,.1)}
+  .tag.kind.litlatsetso{color:var(--green);border-color:rgba(95,217,166,.5);background:rgba(95,217,166,.1)}
+  .tag.kind.likopo{color:#7fa8e6;border-color:rgba(127,168,230,.5);background:rgba(127,168,230,.1)}
+
+  .kindbar{display:flex;gap:6px;flex-wrap:wrap;padding:0 22px 14px;max-width:1000px;margin:0 auto}
+  .kindbar button{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:7px 13px;border-radius:999px;border:1px solid var(--edge);background:transparent;
+    color:var(--mute);cursor:pointer;transition:all .15s ease}
+  .kindbar button:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+  .kindbar button.on{color:var(--ink);border-color:var(--ink);background:rgba(255,255,255,.1)}
   .tag.warn{color:var(--ember);border-color:rgba(226,96,74,.5);background:rgba(226,96,74,.1)}
   .body{white-space:pre-wrap;color:var(--soft);margin:0 0 16px;font-size:1rem}
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -77,6 +88,7 @@ export const ADMIN_PAGE = `<!DOCTYPE html>
     <h1>Suggestions</h1>
     <div class="tabs" id="tabs"></div>
   </header>
+  <div class="kindbar" id="kindbar"></div>
   <div class="wrap"><div id="list"></div></div>
 </div>
 
@@ -85,7 +97,16 @@ export const ADMIN_PAGE = `<!DOCTYPE html>
   "use strict";
   var KEY = "alemanaka-admin-token";
   var status = "new";
+  var kind = "";              // empty means every kind
   var counts = {};
+  var kindCounts = {};
+
+  var KINDS = [
+    { id: "",            label: "All" },
+    { id: "keletso",     label: "Keletso / advice" },
+    { id: "litlatsetso", label: "Litlatsetso / additions" },
+    { id: "likopo",      label: "Likopo / questions" }
+  ];
 
   var gate = document.getElementById("gate");
   var app = document.getElementById("app");
@@ -146,8 +167,22 @@ export const ADMIN_PAGE = `<!DOCTYPE html>
     });
   }
 
+  function drawKindbar(){
+    var el = document.getElementById("kindbar");
+    el.textContent = "";
+    KINDS.forEach(function(k){
+      var b = document.createElement("button");
+      var n = k.id ? (kindCounts[k.id] || 0) : null;
+      b.textContent = k.label + (n === null ? "" : " (" + n + ")");
+      if(k.id === kind) b.className = "on";
+      b.addEventListener("click", function(){ kind = k.id; load(); });
+      el.appendChild(b);
+    });
+  }
+
   function load(){
-    api("/api/admin/suggestions?status=" + encodeURIComponent(status))
+    api("/api/admin/suggestions?status=" + encodeURIComponent(status) +
+        (kind ? "&kind=" + encodeURIComponent(kind) : ""))
       .then(function(r){
         if(r.status === 401){ sessionStorage.removeItem(KEY); showGate("That token wasn't accepted."); return null; }
         return r.json();
@@ -156,7 +191,9 @@ export const ADMIN_PAGE = `<!DOCTYPE html>
         if(!data) return;
         gate.hidden = true; app.hidden = false;
         counts = data.counts || {};
+        kindCounts = data.kindCounts || {};
         drawTabs();
+        drawKindbar();
         render(data.rows || []);
       })
       .catch(function(){ showGate("Couldn't reach the server."); });
@@ -178,6 +215,14 @@ export const ADMIN_PAGE = `<!DOCTYPE html>
 
       var meta = document.createElement("div");
       meta.className = "meta";
+
+      var KIND_LABEL = {
+        keletso: "Keletso", litlatsetso: "Litlatsetso", likopo: "Likopo"
+      };
+      var kindTag = document.createElement("span");
+      kindTag.className = "tag kind " + (r.kind || "keletso");
+      kindTag.textContent = KIND_LABEL[r.kind] || "Keletso";
+      meta.appendChild(kindTag);
 
       var who = document.createElement("span");
       who.className = "who";
