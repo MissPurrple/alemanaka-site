@@ -18,6 +18,24 @@ function Say($msg)  { Write-Host "`n$msg" -ForegroundColor Cyan }
 function Good($msg) { Write-Host "  $msg" -ForegroundColor Green }
 function Warn($msg) { Write-Host "  $msg" -ForegroundColor Yellow }
 
+# Windows PowerShell 5.1 wraps every stderr line from a native program in an
+# error record when you redirect with 2>&1. With ErrorActionPreference set to
+# Stop, an ordinary Wrangler warning then kills the script - which it did, on
+# the last line of the last step, after the deploy had already succeeded.
+# This runs the command with that behaviour switched off and hands back the
+# combined output as plain text.
+function Invoke-Wrangler {
+  param([Parameter(ValueFromRemainingArguments = $true)][string[]]$WranglerArgs)
+  $previous = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+    $output = & npx --yes wrangler@latest @WranglerArgs 2>&1 | Out-String
+  } finally {
+    $ErrorActionPreference = $previous
+  }
+  return $output
+}
+
 Say "Alemanaka setup"
 Write-Host "  Sets up the server that receives suggestions and email sign-ups."
 
@@ -33,11 +51,11 @@ try {
 
 # --- 2. Cloudflare login -----------------------------------------------------
 Say "2/6  Signing in to Cloudflare"
-$who = npx --yes wrangler@latest whoami 2>&1 | Out-String
+$who = Invoke-Wrangler whoami
 if ($who -match "not authenticated") {
   Warn "A browser window will open. Approve the request, then come back here."
   npx --yes wrangler@latest login
-  $who = npx --yes wrangler@latest whoami 2>&1 | Out-String
+  $who = Invoke-Wrangler whoami
   if ($who -match "not authenticated") {
     Warn "Still not signed in. Run .\setup.ps1 again once the browser step completes."
     exit 1
@@ -50,9 +68,9 @@ Say "3/6  Creating the database"
 $toml = Get-Content .\wrangler.toml -Raw -Encoding UTF8
 
 if ($toml -match 'database_id\s*=\s*"PASTE_AFTER_CREATING_THE_DATABASE"') {
-  npx --yes wrangler@latest d1 create alemanaka-feedback 2>&1 | Out-String | Out-Null
+  Invoke-Wrangler d1 create alemanaka-feedback | Out-Null
 
-  $list = npx --yes wrangler@latest d1 list --json 2>&1 | Out-String
+  $list = Invoke-Wrangler d1 list --json
   $dbId = $null
   try {
     $json = $list | ConvertFrom-Json
@@ -77,7 +95,7 @@ if ($toml -match 'database_id\s*=\s*"PASTE_AFTER_CREATING_THE_DATABASE"') {
 
 # --- 4. Tables ---------------------------------------------------------------
 Say "4/6  Creating the tables"
-npx --yes wrangler@latest d1 execute alemanaka-feedback --file=./schema.sql --remote --yes
+Invoke-Wrangler d1 execute alemanaka-feedback --file=./schema.sql --remote --yes | Out-Null
 Good "Tables ready"
 
 # --- 5. Secrets --------------------------------------------------------------
@@ -118,7 +136,7 @@ Good "Secrets stored"
 
 # --- 6. Deploy ---------------------------------------------------------------
 Say "6/6  Deploying"
-$deploy = npx --yes wrangler@latest deploy 2>&1 | Out-String
+$deploy = Invoke-Wrangler deploy
 Write-Host $deploy
 
 $workerUrl = $null

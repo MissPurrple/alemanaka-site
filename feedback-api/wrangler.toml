@@ -2,14 +2,16 @@ name = "alemanaka-feedback"
 main = "src/index.js"
 compatibility_date = "2026-01-15"
 
+# Stated explicitly so deploys stop warning that it is being assumed.
+workers_dev = true
+
 [vars]
 # Where the site is served from. Only these origins may post suggestions.
 ALLOWED_ORIGINS = "https://misspurrple.github.io"
 
 # The Worker's own public URL, used to build the link in the confirmation
-# email. Replace after the first deploy tells you the workers.dev address,
-# then run: npx wrangler deploy
-PUBLIC_API_URL = "https://alemanaka-feedback.YOUR-SUBDOMAIN.workers.dev"
+# email.
+PUBLIC_API_URL = "https://alemanaka-feedback.misspurple-freelance.workers.dev"
 
 # The From address on confirmation emails. Must be on a domain verified
 # with Resend.
