@@ -43,6 +43,111 @@
 .intro-block p { color: var(--text-soft); margin-bottom: 16px; }
 .intro-block p:last-child { margin-bottom: 0; }
 
+/* ---------- The orrery ----------
+   Sun, earth and moon, turning at the ratio they actually keep: the moon
+   laps the earth 12.37 times in a year. That fraction is the whole reason a
+   lunar year will not sit still against a solar one, so the animation is
+   timed to it rather than to whatever looked pleasant — 37.11s against 3s. */
+.orrery-wrap { margin: 30px 0 34px; }
+.orrery {
+  position: relative;
+  width: min(330px, 76vw);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  animation: orreryFloat 9s ease-in-out infinite;
+}
+@keyframes orreryFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+@keyframes orbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.orrery .path {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed rgba(242, 238, 224, 0.13);
+}
+.orrery .path-earth { inset: 8%; }
+
+.orrery .sun {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 34%, #ffe6a8, var(--gold) 55%, #b8801f 100%);
+  box-shadow: 0 0 30px rgba(232, 179, 74, 0.55), 0 0 70px rgba(232, 179, 74, 0.25);
+}
+
+.orrery .earth-orbit {
+  position: absolute;
+  inset: 8%;
+  animation: orbit 37.11s linear infinite;
+}
+.orrery .earth-holder {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 76px;
+  height: 76px;
+  margin: -38px 0 0 -38px;
+}
+.orrery .earth {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 21px;
+  height: 21px;
+  margin: -10.5px 0 0 -10.5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 32%, #a9c8f0, var(--mariha) 60%, #3d5f93 100%);
+  box-shadow: 0 0 14px rgba(127, 168, 230, 0.6);
+}
+.orrery .moon-path {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px dashed rgba(242, 238, 224, 0.11);
+}
+.orrery .moon-orbit {
+  position: absolute;
+  inset: 0;
+  animation: orbit 3s linear infinite;
+}
+.orrery .moon {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: #f3ecd8;
+  box-shadow: 0 0 8px rgba(243, 236, 216, 0.7);
+}
+
+.orrery-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  justify-content: center;
+  margin-top: 22px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--text-mute);
+}
+.orrery-key span { display: inline-flex; align-items: center; gap: 8px; }
+.orrery-key i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.orrery-caption {
+  text-align: center;
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: var(--text-mute);
+  max-width: 52ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .term-table {
   width: 100%;
   border-collapse: collapse;
@@ -188,6 +293,33 @@
 
 <section id="taba" class="intro-block">
   <h2>A calendar kept by the moon</h2>
+
+  <div class="orrery-wrap">
+    <div class="orrery" role="img"
+         aria-label="The sun at the centre, the earth circling it, and the moon circling the earth — turning at the ratio they keep in life, roughly twelve and a third moons to one year.">
+      <div class="path path-earth" aria-hidden="true"></div>
+      <div class="sun" aria-hidden="true"></div>
+      <div class="earth-orbit" aria-hidden="true">
+        <div class="earth-holder">
+          <div class="moon-path"></div>
+          <div class="earth"></div>
+          <div class="moon-orbit"><div class="moon"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="orrery-key" aria-hidden="true">
+      <span><i style="background:var(--gold)"></i>Letsatsi · Sun</span>
+      <span><i style="background:var(--mariha)"></i>Lefatše · Earth</span>
+      <span><i style="background:#f3ecd8"></i>Khoeli · Moon</span>
+    </p>
+    <p class="orrery-caption">
+      Turning at the ratio they keep in life: the moon rounds the earth about
+      twelve and a third times while the earth rounds the sun once. That third
+      is why the year will not sit still.
+    </p>
+  </div>
+
   <p>
     The Basotho calendar is lunisolar: its months follow the cycles of the
     moon's phases, fitted to the solar farming year. Because the moon does not

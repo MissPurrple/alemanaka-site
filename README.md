@@ -8,7 +8,7 @@ the Maloti, and the planting and harvest windows for crops Basotho households
 actually grow. Built as a cultural preservation project, and as the digital
 companion to a printed wall calendar.
 
-Created by **Barefaced Media**.
+Curated by **Barefaced Media**.
 
 ## Running it
 
