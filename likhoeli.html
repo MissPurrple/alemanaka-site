@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Likhoeli tsa Selemo — the twelve months | Alemanaka</title>
+<meta name="description" content="The twelve months of the Basotho year, their attested etymologies, and what each one describes in the world.">
+<link rel="stylesheet" href="styles.css">
+<script src="data.js"></script>
+<style>
+/* ---------- Page-specific: the month entries ---------- */
+.page-head { padding: 16vh 24px 6vh; text-align: center; }
+.page-head h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.2rem, 6vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 12px 0 0;
+}
+.page-head .sub { color: var(--text-soft); max-width: 60ch; margin: 18px auto 0; }
+
+.back {
+  display: inline-block;
+  margin-bottom: 26px;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  text-decoration: none;
+}
+.back:hover { color: var(--gold-lift); }
+
+.intro-block {
+  max-width: 68ch;
+  margin: 0 auto;
+  padding: 0 24px 8vh;
+}
+.intro-block h2 {
+  font-size: clamp(1.4rem, 3.2vw, 1.9rem);
+  margin: 0 0 14px;
+}
+.intro-block p { color: var(--text-soft); margin-bottom: 16px; }
+.intro-block p:last-child { margin-bottom: 0; }
+
+.term-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0 8px;
+  font-size: 0.92rem;
+}
+.term-table th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  font-weight: 700;
+  padding: 0 14px 8px 0;
+  border-bottom: 1px solid var(--edge);
+}
+.term-table td {
+  padding: 11px 14px 11px 0;
+  border-bottom: 1px solid rgba(242, 238, 224, 0.07);
+  color: var(--text-soft);
+  vertical-align: top;
+}
+.term-table td:first-child {
+  font-family: var(--serif);
+  font-size: 1.02rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* ---------- Month entries ---------- */
+.months-page { max-width: 900px; margin: 0 auto; padding: 0 24px 12vh; }
+
+.month-entry {
+  position: relative;
+  padding: 34px 0 32px 26px;
+  border-top: 1px solid var(--edge);
+}
+.month-entry:last-child { border-bottom: 1px solid var(--edge); }
+.month-entry .rail {
+  position: absolute;
+  left: 0;
+  top: 36px;
+  bottom: 32px;
+  width: 3px;
+  border-radius: 3px;
+}
+.month-entry.current { background: rgba(232, 179, 74, 0.05); }
+
+.month-entry .num {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  color: var(--text-mute);
+}
+.month-entry h2 {
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  margin: 4px 0 2px;
+  line-height: 1.1;
+}
+.month-entry .greg {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.month-entry .now-tag {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 179, 74, 0.45);
+  background: rgba(232, 179, 74, 0.12);
+  color: var(--gold-lift);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.month-entry .lede {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  color: var(--text);
+  margin: 16px 0 0;
+  max-width: 60ch;
+}
+
+.month-entry dl { margin: 20px 0 0; display: grid; gap: 14px; }
+.month-entry dt {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.month-entry dd { margin: 0; color: var(--text-soft); max-width: 66ch; }
+.month-entry dd.note-line { color: var(--text-mute); font-size: 0.9rem; }
+
+.source-line {
+  margin-top: 18px;
+  font-size: 0.76rem;
+  font-style: italic;
+  color: var(--text-mute);
+}
+
+.page-foot {
+  border-top: 1px solid var(--edge);
+  padding: 40px 24px 90px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-mute);
+}
+.page-foot a { color: var(--text-soft); }
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#months">Skip to the months</a>
+
+<div id="stars" aria-hidden="true"></div>
+<a class="brand" href="index.html">Alemanaka</a>
+
+<nav class="dock" aria-label="Sections">
+  <a href="index.html">Home</a>
+  <a href="#taba">The calendar</a>
+  <a href="#months">The months</a>
+  <a href="references.html">Sources</a>
+</nav>
+
+<header class="page-head">
+  <a class="back" href="index.html">&larr; Back to the calendar</a>
+  <p class="eyebrow">Likhoeli tsa Selemo</p>
+  <h1>The twelve months<br>and what they name</h1>
+  <p class="sub">
+    Every month in the Basotho year is named for something happening in the
+    world that month — a plant sending up shoots, a grasshopper arriving in
+    swarms, grain hardening past the reach of birds. Each entry below gives the
+    derivation as it is attested in the sources, not as it is guessed at.
+  </p>
+</header>
+
+<section id="taba" class="intro-block">
+  <h2>A calendar kept by the moon</h2>
+  <p>
+    The Basotho calendar is lunisolar: its months follow the cycles of the
+    moon's phases, fitted to the solar farming year. Because the moon does not
+    keep step with the sun, the new year arrives at a different time each year.
+  </p>
+  <p>
+    Three phases are named as the year turns. When the moon goes dark, when it
+    first shows a sliver, and when that sliver widens — that last sight is the
+    signal that a new year has dawned.
+  </p>
+
+  <table class="term-table">
+    <caption class="skip-link">Moon phases marking the turn of the year</caption>
+    <thead>
+      <tr><th scope="col">Sesotho</th><th scope="col">Meaning</th><th scope="col">Phase</th></tr>
+    </thead>
+    <tbody id="phase-rows"></tbody>
+  </table>
+
+  <p>
+    <strong>Selemo sa Basotho</strong>, the Basotho New Year, is marked on the
+    first of August, in the month of Phato. It was traditionally welcomed with
+    <em>Mokete oa leoa</em>, a thanksgiving to the forebears and to God for the
+    harvest. It is still marked today with gatherings, music, the Mohobelo and
+    Serobolelo dances, horse riding, food and dress.
+  </p>
+
+  <h2 style="margin-top:36px;">Two seasons, and four</h2>
+  <p>
+    Sesotho speakers traditionally recognise two seasons rather than four. The
+    four-season words exist and are used, but the older division is the one the
+    farming year turns on.
+  </p>
+
+  <table class="term-table">
+    <thead>
+      <tr><th scope="col">Season</th><th scope="col">Covers</th><th scope="col">Root</th></tr>
+    </thead>
+    <tbody id="season-rows"></tbody>
+  </table>
+
+  <p style="margin-top:20px;">
+    <em>Selemo</em> is the same word as the word for year, and comes from
+    <em>-lema</em>, to plant. The year and the planting are not separable.
+  </p>
+
+  <h2 style="margin-top:36px;">Deep Sesotho</h2>
+  <p>
+    These month names belong to what is called <em>Sesotho sa boholo</em> —
+    deep Sesotho. They are not much used in casual speech, where the English
+    months have taken over, but they hold their place in news broadcasts and
+    other formal media, and they remain more common there than the borrowed
+    names.
+  </p>
+  <p>
+    The words themselves are old. <em>Mariha</em> reconstructs to Proto-Bantu
+    <em>*-tîka</em>, cold weather or cold season; <em>Lehoetla</em> to
+    <em>*-ginja</em>. These are concepts carried across hundreds of Bantu
+    languages, older than the language that holds them now.
+  </p>
+</section>
+
+<section id="months" class="months-page">
+  <div id="month-entries"></div>
+</section>
+
+<footer class="page-foot">
+  <p>
+    Etymologies attested in Mabille &amp; Dieterlen, <em>Southern Sotho-English
+    Dictionary</em> (1950). <a href="references.html">Full sources and references</a>.
+  </p>
+  <p style="margin-top:10px;"><a href="index.html">&larr; Back to the calendar</a></p>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var DATA = window.ALEMANAKA_DATA;
+  var MONTHS = DATA.MONTHS, SEASONS = DATA.SEASONS;
+
+  /* Starfield, matching the front page. */
+  (function () {
+    var shadows = [];
+    for (var i = 0; i < 140; i++) {
+      var x = Math.round(Math.random() * 100);
+      var y = Math.round(Math.random() * 100);
+      var size = Math.random() > 0.85 ? 1 : 0;
+      var op = (0.25 + Math.random() * 0.6).toFixed(2);
+      shadows.push(x + "vw " + y + "vh 0 " + size + "px rgba(230,225,245," + op + ")");
+    }
+    document.getElementById("stars").style.boxShadow = shadows.join(",");
+  })();
+
+  /* Moon-phase and season tables. */
+  var phaseRows = document.getElementById("phase-rows");
+  DATA.MOON_PHASES.forEach(function (p) {
+    var tr = document.createElement("tr");
+    [p.st, p.en, p.note].forEach(function (v, i) {
+      var cell = document.createElement(i === 0 ? "th" : "td");
+      if (i === 0) cell.setAttribute("scope", "row");
+      cell.textContent = v;
+      tr.appendChild(cell);
+    });
+    phaseRows.appendChild(tr);
+  });
+
+  var seasonRows = document.getElementById("season-rows");
+  DATA.SEASON_TERMS.primary.forEach(function (s) {
+    var tr = document.createElement("tr");
+    [s.st, s.en, s.root || ""].forEach(function (v, i) {
+      var cell = document.createElement(i === 0 ? "th" : "td");
+      if (i === 0) cell.setAttribute("scope", "row");
+      cell.textContent = v;
+      tr.appendChild(cell);
+    });
+    seasonRows.appendChild(tr);
+  });
+
+  /* The twelve entries. */
+  var seasonColor = {};
+  SEASONS.forEach(function (s) { seasonColor[s.id] = s.color; });
+
+  var now = new Date();
+  var wrap = document.getElementById("month-entries");
+
+  MONTHS.forEach(function (m, i) {
+    var isNow = m.cal === now.getMonth();
+
+    var entry = document.createElement("article");
+    entry.className = "month-entry" + (isNow ? " current" : "");
+    entry.id = m.st.toLowerCase().replace(/[^a-z]/g, "");
+
+    var rail = document.createElement("div");
+    rail.className = "rail";
+    rail.style.background = seasonColor[m.season];
+    rail.style.boxShadow = "0 0 12px " + seasonColor[m.season];
+    entry.appendChild(rail);
+
+    var num = document.createElement("p");
+    num.className = "num";
+    num.textContent = "Khoeli ea " + (i + 1);
+    entry.appendChild(num);
+
+    var h = document.createElement("h2");
+    h.textContent = m.st;
+    if (isNow) {
+      var tag = document.createElement("span");
+      tag.className = "now-tag";
+      tag.textContent = "khoeli ena";
+      h.appendChild(tag);
+    }
+    entry.appendChild(h);
+
+    var greg = document.createElement("p");
+    greg.className = "greg";
+    greg.textContent = m.en;
+    entry.appendChild(greg);
+
+    var lede = document.createElement("p");
+    lede.className = "lede";
+    lede.textContent = m.meaning;
+    entry.appendChild(lede);
+
+    var dl = document.createElement("dl");
+    function pair(term, text, cls) {
+      if (!text) return;
+      var dt = document.createElement("dt");
+      dt.textContent = term;
+      var dd = document.createElement("dd");
+      if (cls) dd.className = cls;
+      dd.textContent = text;
+      var group = document.createElement("div");
+      group.appendChild(dt);
+      group.appendChild(dd);
+      dl.appendChild(group);
+    }
+    pair("Root", m.root);
+    pair("What it names", m.context);
+    pair("In the fields", m.work);
+    pair("Also recorded", m.note, "note-line");
+    entry.appendChild(dl);
+
+    var src = document.createElement("p");
+    src.className = "source-line";
+    src.textContent = "Mabille & Dieterlen (1950)";
+    entry.appendChild(src);
+
+    wrap.appendChild(entry);
+  });
+})();
+</script>
+</body>
+</html>
