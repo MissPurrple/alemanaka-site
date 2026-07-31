@@ -731,13 +731,20 @@ footer .fine {
   font-size: 0.8rem;
   color: var(--text-mute);
 }
+/* The credit and the signature share the type of the line above them, so
+   the three read as one closing block rather than three separate voices. */
+footer .credit,
 footer .sign {
   margin-top: 6px;
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 0.92rem;
-  color: var(--text-soft);
+  font-size: 0.8rem;
+  color: var(--text-mute);
 }
+footer .credit a {
+  color: var(--text-soft);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(242, 238, 224, 0.25);
+}
+footer .credit a:hover { color: var(--gold-lift); border-bottom-color: var(--gold); }
 
 /* ---------- Suggestion box ---------- */
 .dock a.suggest { color: var(--gold); }
@@ -1165,6 +1172,7 @@ footer .sign {
     <h3>Sources &amp; next steps</h3>
     <p class="body">Crop guidance drawn from <em>Lost Crops of Africa</em>, Vols I–III (National Academies Press), the FAO–WFP Crop &amp; Food Supply Assessment for Lesotho, and FEWS NET / USDA crop calendars. Sesotho throughout uses Lesotho orthography.</p>
     <p class="fine">Alemanaka — a cultural preservation project. Sample edition, 2026–27 growing year.</p>
+    <p class="credit">Music: <a href="https://soundcloud.com/rosem-sc/hae" target="_blank" rel="noopener noreferrer">Hae</a> by <a href="https://soundcloud.com/rosem-sc" target="_blank" rel="noopener noreferrer">Rosem</a></p>
     <p class="sign">Created by Barefaced Media</p>
   </div>
 </footer>
@@ -1291,13 +1299,17 @@ window.ALEMANAKA_FEEDBACK = {
   var frame = document.getElementById("sc-player");
   var STORE = "alemanaka-sound";
   var widget = null;
-  var playing = false;
+
+  // What the reader asked for, kept apart from what the player is doing at
+  // this instant. A track reaching its end fires PAUSE, and folding that back
+  // into the same flag was what stopped the loop restarting.
+  var wantSound = false;
 
   function paint() {
-    btn.setAttribute("aria-pressed", playing ? "true" : "false");
-    label.textContent = playing ? "Sound on" : "Sound off";
+    btn.setAttribute("aria-pressed", wantSound ? "true" : "false");
+    label.textContent = wantSound ? "Sound on" : "Sound off";
     btn.setAttribute("aria-label",
-      (playing ? "Mute" : "Play") + " background music: Hae by Rosem");
+      (wantSound ? "Mute" : "Play") + " background music: Hae by Rosem");
   }
 
   function ready() {
@@ -1308,10 +1320,15 @@ window.ALEMANAKA_FEEDBACK = {
       btn.hidden = false;
       widget.setVolume(55);
 
-      // Loop: SoundCloud does not repeat a single track on its own.
+      // Loop: SoundCloud does not repeat a single track on its own. The
+      // rewind needs a beat to settle before play is called again, or the
+      // widget swallows it and the track simply stops.
       widget.bind(SC.Widget.Events.FINISH, function () {
+        if (!wantSound) return;
         widget.seekTo(0);
-        if (playing) widget.play();
+        setTimeout(function () {
+          if (wantSound) widget.play();
+        }, 120);
       });
 
       // A reader who turned it on last time gets it back, but only once
@@ -1320,26 +1337,17 @@ window.ALEMANAKA_FEEDBACK = {
         var resume = function () {
           document.removeEventListener("pointerdown", resume);
           document.removeEventListener("keydown", resume);
-          if (!playing) { playing = true; widget.play(); paint(); }
+          if (!wantSound) { wantSound = true; widget.play(); paint(); }
         };
         document.addEventListener("pointerdown", resume, { once: true });
         document.addEventListener("keydown", resume, { once: true });
       }
     });
 
-    widget.bind(SC.Widget.Events.PLAY,  function () { playing = true;  paint(); });
-    widget.bind(SC.Widget.Events.PAUSE, function () { playing = false; paint(); });
-
     btn.addEventListener("click", function () {
-      if (playing) {
-        widget.pause();
-        playing = false;
-        try { localStorage.setItem(STORE, "off"); } catch (e) {}
-      } else {
-        widget.play();
-        playing = true;
-        try { localStorage.setItem(STORE, "on"); } catch (e) {}
-      }
+      wantSound = !wantSound;
+      if (wantSound) widget.play(); else widget.pause();
+      try { localStorage.setItem(STORE, wantSound ? "on" : "off"); } catch (e) {}
       paint();
     });
 
