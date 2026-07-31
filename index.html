@@ -502,6 +502,15 @@ section, .beat { position: relative; z-index: 1; }
   box-shadow: inset 0 0 0 1px rgba(232, 179, 74, 0.35);
 }
 .mc-row.current .mc-name { color: var(--gold-lift); }
+.mc-turn-tag {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.mc-row.turn { border-top: 1px dashed rgba(242, 238, 224, 0.22); margin-top: 6px; padding-top: 10px; }
 .mc-name { font-family: var(--serif); font-size: 0.95rem; line-height: 1.3; }
 .mc-now-tag {
   display: block;
@@ -1444,11 +1453,22 @@ window.ALEMANAKA_FEEDBACK = {
     return SEASONS[SEASONS.length - 1];
   }
 
+  // Dates are always Lesotho's, whoever is reading. A full moon that rises
+  // late on a Sunday in Maseru is still Sunday's moon to someone in London.
+  var LESOTHO_TZ = { timeZone: "Africa/Maseru" };
+
+  function withTz(opts) {
+    var o = { timeZone: LESOTHO_TZ.timeZone };
+    for (var k in opts) if (opts.hasOwnProperty(k)) o[k] = opts[k];
+    return o;
+  }
+
   function fmtDate(d) {
-    return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    return d.toLocaleDateString("en-GB",
+      withTz({ weekday: "long", day: "numeric", month: "long", year: "numeric" }));
   }
   function fmtShort(d) {
-    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    return d.toLocaleDateString("en-GB", withTz({ day: "numeric", month: "short" }));
   }
 
   /* ============================================================
@@ -1457,14 +1477,109 @@ window.ALEMANAKA_FEEDBACK = {
      to within a few hours, which is plenty for a calendar.
      ============================================================ */
 
-  var SYNODIC = 29.530588853;
-  var NEW_MOON_EPOCH = Date.UTC(2000, 0, 6, 18, 14, 0);
+  /* ------------------------------------------------------------
+     TRUE PHASES OF THE MOON
+     Meeus, Astronomical Algorithms, chapter 49.
+
+     A plain synodic-average is not good enough here. The moon's orbit is
+     elliptical, so a real full moon runs up to about half a day either side
+     of the average — enough to land it on the wrong date, and the date is
+     what a calendar is for. The average put the July 2027 full moon on the
+     19th; it truly falls on the 18th, which is exactly the moon that decides
+     where the year turns.
+
+     All dates are Maseru time (SAST, UTC+2, no daylight saving), so the
+     calendar reads the same in Lesotho as it does anywhere else.
+     ------------------------------------------------------------ */
+
+  var MASERU_OFFSET = 2 * 3600000;
+  var RAD = Math.PI / 180;
+
+  /** Maseru-local wall clock, to be read with the getUTC* accessors. */
+  function maseru(d) { return new Date(d.getTime() + MASERU_OFFSET); }
+
+  /** Date of lunation `k`; phase 0 = new moon, 0.5 = full moon. */
+  function lunation(k, phase) {
+    var full = phase === 0.5;
+    k = k + phase;
+    var T = k / 1236.85;
+    var jde = 2451550.09766 + 29.530588861 * k
+            + 0.00015437 * T * T - 0.000000150 * T * T * T + 0.00000000073 * T * T * T * T;
+
+    var E  = 1 - 0.002516 * T - 0.0000074 * T * T;
+    var M  = (2.5534 + 29.10535670 * k - 0.0000014 * T * T - 0.00000011 * T * T * T) * RAD;
+    var M1 = (201.5643 + 385.81693528 * k + 0.0107582 * T * T + 0.00001238 * T * T * T) * RAD;
+    var F  = (160.7108 + 390.67050284 * k - 0.0016118 * T * T - 0.00000227 * T * T * T) * RAD;
+    var O  = (124.7746 - 1.56375588 * k + 0.0020672 * T * T + 0.00000215 * T * T * T) * RAD;
+
+    // The leading three terms differ between new and full moon; the rest agree.
+    var c = (full ? -0.40614 : -0.40720) * Math.sin(M1)
+          + (full ?  0.17302 :  0.17241) * E * Math.sin(M)
+          + (full ?  0.01614 :  0.01608) * Math.sin(2 * M1)
+          + 0.01043 * Math.sin(2 * F)
+          + 0.00734 * E * Math.sin(M1 - M)
+          - 0.00515 * E * Math.sin(M1 + M)
+          + 0.00209 * E * E * Math.sin(2 * M)
+          - 0.00111 * Math.sin(M1 - 2 * F)
+          - 0.00057 * Math.sin(M1 + 2 * F)
+          + 0.00056 * E * Math.sin(2 * M1 + M)
+          - 0.00042 * Math.sin(3 * M1)
+          + 0.00042 * E * Math.sin(M + 2 * F)
+          + 0.00038 * E * Math.sin(M - 2 * F)
+          - 0.00024 * E * Math.sin(2 * M1 - M)
+          - 0.00017 * Math.sin(O)
+          - 0.00007 * Math.sin(M1 + 2 * M);
+
+    var A = [
+      [0.000325, 299.77 + 0.107408 * k - 0.009173 * T * T], [0.000165, 251.88 + 0.016321 * k],
+      [0.000164, 251.83 + 26.651886 * k], [0.000126, 349.42 + 36.412478 * k],
+      [0.000110,  84.66 + 18.206239 * k], [0.000062, 141.74 + 53.303771 * k],
+      [0.000060, 207.14 +  2.453732 * k], [0.000056, 154.84 +  7.306860 * k],
+      [0.000047,  34.52 + 27.261239 * k], [0.000042, 207.19 +  0.121824 * k],
+      [0.000040, 291.34 +  1.844379 * k], [0.000037, 161.72 + 24.198154 * k],
+      [0.000035, 239.56 + 25.513099 * k], [0.000023, 331.55 +  3.592518 * k]
+    ];
+    for (var i = 0; i < A.length; i++) c += A[i][0] * Math.sin(A[i][1] * RAD);
+
+    return new Date((jde + c - 2440587.5) * DAY_MS);
+  }
+
+  function newMoonAt(k)  { return lunation(k, 0); }
+  function fullMoonAt(k) { return lunation(k, 0.5); }
+
+  /** Rough lunation index for a date, used as a search seed. */
+  function seedIndex(d) {
+    return Math.floor((d.getUTCFullYear() + (d.getUTCMonth() / 12) - 2000) * 12.3685);
+  }
+
+  /** Index of the last new moon on or before `d`. */
+  function lastNewMoonIndex(d) {
+    var k = seedIndex(d);
+    while (newMoonAt(k) > d) k--;
+    while (newMoonAt(k + 1) <= d) k++;
+    return k;
+  }
+
+  /** Index of the last full moon on or before `d`. */
+  function lastFullMoonIndex(d) {
+    var k = seedIndex(d);
+    while (fullMoonAt(k) > d) k--;
+    while (fullMoonAt(k + 1) <= d) k++;
+    return k;
+  }
+
+  /** Where `d` sits in its lunation, as 0 (new) to 1 (next new). */
+  function moonPhaseFraction(d) {
+    var k = lastNewMoonIndex(d);
+    var from = newMoonAt(k), to = newMoonAt(k + 1);
+    return (d - from) / (to - from);
+  }
 
   function moonAge(d) {
-    var age = ((d.getTime() - NEW_MOON_EPOCH) / DAY_MS) % SYNODIC;
-    return age < 0 ? age + SYNODIC : age;
+    var k = lastNewMoonIndex(d);
+    return (d - newMoonAt(k)) / DAY_MS;
   }
-  function moonPhaseFraction(d) { return moonAge(d) / SYNODIC; }
+
   function moonIllumination(p) { return (1 - Math.cos(2 * Math.PI * p)) / 2; }
 
   function phaseName(p) {
@@ -1508,38 +1623,37 @@ window.ALEMANAKA_FEEDBACK = {
      mismatch is the reason the tradition speaks of thirteen at all.
      ------------------------------------------------------------ */
 
-  function fullMoonAt(k) {
-    return new Date(NEW_MOON_EPOCH + (k + 0.5) * SYNODIC * DAY_MS);
-  }
-
-  /** Index of the last full moon falling on or before the given date. */
-  function lastFullMoonIndex(d) {
-    var k = Math.floor((d.getTime() - NEW_MOON_EPOCH) / DAY_MS / SYNODIC - 0.5);
-    while (fullMoonAt(k + 1) <= d) k++;
-    while (fullMoonAt(k) > d) k--;
-    return k;
-  }
+  /** The last moment of 31 July in year `y`, Maseru time. */
+  function endOfJuly(y) { return new Date(Date.UTC(y, 6, 31, 21, 59, 59)); }
 
   /** The agricultural year containing `d`, as { gregorianStart, cycles[] }. */
   function moonCyclesFor(d) {
-    // The year is chosen by the anchor moon, not by the calendar month. In the
-    // days between the last full moon of July and the 31st, the moons have
-    // already turned over while the Gregorian month has not — the counting
-    // should follow the moon.
-    var y = d.getFullYear();
-    if (d < fullMoonAt(lastFullMoonIndex(new Date(y, 6, 31, 23, 59, 59)))) y -= 1;
+    // The year turns on the moon, not on the calendar month. Between the last
+    // full moon of July and the 31st, the moons have already handed over while
+    // the Gregorian month has not.
+    var y = maseru(d).getUTCFullYear();
+    if (d < fullMoonAt(lastFullMoonIndex(endOfJuly(y)))) y -= 1;
 
-    var anchor = new Date(y, 6, 31, 23, 59, 59);        // last moment of July
-    var nextAnchor = new Date(y + 1, 6, 31, 23, 59, 59);
+    var k0 = lastFullMoonIndex(endOfJuly(y));
+    var k1 = lastFullMoonIndex(endOfJuly(y + 1));
 
-    var k0 = lastFullMoonIndex(anchor);
-    var k1 = lastFullMoonIndex(nextAnchor);
-
+    // Every full moon from the one that opens the year to the one that closes
+    // it, the closing moon included. That last moon belongs to both years at
+    // once — it is where the handover happens — and counting it is what gives
+    // the year its thirteen moons.
     var cycles = [];
-    for (var k = k0; k < k1; k++) {
-      cycles.push({ start: fullMoonAt(k), end: fullMoonAt(k + 1) });
+    for (var k = k0; k <= k1; k++) {
+      cycles.push({
+        start: fullMoonAt(k),
+        end: fullMoonAt(k + 1),
+        isTurn: k === k1
+      });
     }
-    return { gregorianStart: new Date(y, 7, 1), gregorianEnd: new Date(y + 1, 6, 31), cycles: cycles };
+    return {
+      gregorianStart: new Date(y, 7, 1),
+      gregorianEnd: new Date(y + 1, 6, 31),
+      cycles: cycles
+    };
   }
 
   // Ordinals in Sesotho. These need a native speaker's eye — the compound
@@ -1551,9 +1665,11 @@ window.ALEMANAKA_FEEDBACK = {
     "ea leshome le metso e meraro"
   ];
 
+  /** The next full moon (target 0.5) or new moon (target 0) after `from`. */
   function nextPhaseDate(from, target) {
-    var cycles = (from.getTime() - NEW_MOON_EPOCH) / DAY_MS / SYNODIC;
-    return new Date(NEW_MOON_EPOCH + (Math.floor(cycles - target) + 1 + target) * SYNODIC * DAY_MS);
+    return target === 0.5
+      ? fullMoonAt(lastFullMoonIndex(from) + 1)
+      : newMoonAt(lastNewMoonIndex(from) + 1);
   }
 
   /* ============================================================
@@ -1868,7 +1984,7 @@ window.ALEMANAKA_FEEDBACK = {
 
     cycles.forEach(function (c, i) {
       var row = document.createElement("div");
-      row.className = "mc-row";
+      row.className = "mc-row" + (c.isTurn ? " turn" : "");
 
       var label = document.createElement("div");
       label.className = "mc-name";
@@ -1876,6 +1992,14 @@ window.ALEMANAKA_FEEDBACK = {
       var dates = document.createElement("small");
       dates.textContent = fmtShort(c.start) + " – " + fmtShort(new Date(c.end.getTime() - DAY_MS));
       label.appendChild(dates);
+
+      if (c.isTurn) {
+        var turn = document.createElement("span");
+        turn.className = "mc-turn-tag";
+        turn.textContent = "the year turns here";
+        label.appendChild(turn);
+      }
+
       row.appendChild(label);
 
       var track = document.createElement("div");
@@ -1892,6 +2016,13 @@ window.ALEMANAKA_FEEDBACK = {
       bar.style.background = seasonOf[season.id];
       bar.style.boxShadow = "0 0 10px " + seasonOf[season.id] + "66";
       bar.title = "Khoeli " + (KHOELI_ORDINALS[i] || i + 1) + " · " + season.name;
+      // The closing moon is drawn hollow: it opens the year that follows, so
+      // it belongs to this chart as a boundary rather than as a full month.
+      if (c.isTurn) {
+        bar.style.background = "transparent";
+        bar.style.border = "1px dashed " + seasonOf[season.id];
+        bar.style.boxShadow = "none";
+      }
       track.appendChild(bar);
 
       // Mark today on whichever cycle currently holds it.
@@ -1915,20 +2046,22 @@ window.ALEMANAKA_FEEDBACK = {
 
     var n = cycles.length;
     var startY = year.gregorianStart.getFullYear();
+    var yearLabel = startY + "–" + String(startY + 1).slice(2);
+
     document.getElementById("moons-intro").textContent =
-      "Khoeli means both moon and month. This year the land turns through " + n +
-      " full moons, the first rising on " + fmtDate(cycles[0].start) +
-      ". Each bar below is one moon, laid over the Gregorian months so you can " +
-      "read your own calendar against the older one.";
+      "Khoeli means both moon and month. The " + yearLabel + " year runs through " + n +
+      " full moons, the first rising on " + fmtDate(cycles[0].start) + " and the last on " +
+      fmtDate(cycles[n - 1].start) + ". Each bar below is one moon, laid over the " +
+      "Gregorian months so you can read your own calendar against the older one.";
 
     document.getElementById("moons-note").innerHTML =
-      "<strong>Likhoeli tse leshome le metso e meraro:</strong> the tradition counts " +
-      "thirteen moons in a year, and that is why. Twelve lunar cycles run about 354 " +
-      "days and thirteen about 384, while the sun takes 365 — so the moons drift " +
-      "against the dates, and a year holds twelve or thirteen depending on where the " +
-      "full moons happen to fall. The " + startY + "–" + String(startY + 1).slice(2) +
-      " year carries " + n + ". Counting begins at the last full moon of July, which is " +
-      "why the first moon can rise before August does.";
+      "<strong>Ho bala likhoeli:</strong> the year is bracketed by the last full moon " +
+      "of July at either end, and both are counted — the closing moon, drawn hollow, " +
+      "is the one that opens the year to come. Because a lunar cycle is about 29 and a " +
+      "half days, twelve of them fall roughly eleven days short of the sun's year. The " +
+      "moons therefore drift backwards through the dates, and the bars step sideways " +
+      "down the chart. That drift is why the counting is done in moons rather than " +
+      "dates, and why the year carries thirteen of them.";
   })();
 
   /* ============================================================
