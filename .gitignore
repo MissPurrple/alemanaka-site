@@ -11,3 +11,9 @@ desktop.ini
 # Build/design-tool artifacts — the source of truth is index.html
 *.bundle.html
 node_modules/
+
+# Wrangler's local cache. Holds the signed-in Cloudflare account id and the
+# account's email address — never commit it.
+.wrangler/
+.dev.vars
+.env
