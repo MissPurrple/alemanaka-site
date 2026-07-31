@@ -14,7 +14,33 @@ after three days. Nothing ever reaches the site by itself.
 Two free accounts: [Cloudflare](https://dash.cloudflare.com/sign-up) and
 [Resend](https://resend.com) for sending mail. Plus Node.js installed locally.
 
-## Steps
+## The easy way
+
+Open PowerShell in this folder and run:
+
+```powershell
+.\setup.ps1
+```
+
+It signs you in, creates the database and tables, fills in `wrangler.toml`,
+takes your secrets, and deploys — then tells you the two values to paste back.
+Safe to run more than once; it skips whatever is already done.
+
+If you'd rather do it by hand, or the script stops partway, the same steps are
+below.
+
+## The steps by hand
+
+**0. Sign in to Cloudflare first**
+
+Nothing else works until this is done — it is what "you are not authenticated"
+means if you have seen that error.
+
+```bash
+cd feedback-api && npx wrangler login
+```
+
+A browser window opens; approve the request and come back.
 
 **1. Create the database**
 

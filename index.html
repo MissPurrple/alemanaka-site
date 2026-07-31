@@ -444,6 +444,107 @@ section, .beat { position: relative; z-index: 1; }
   margin-bottom: 6px;
 }
 
+/* ---------- The moon-cycle chart ----------
+   Each khoeli is a bar laid over an axis of Gregorian months, so the two
+   ways of counting a year can be read against each other. */
+.moonchart {
+  margin-top: 8px;
+  border: 1px solid var(--edge);
+  border-radius: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  padding: 20px 22px 24px;
+  overflow-x: auto;
+}
+.moonchart-inner { min-width: 620px; }
+
+.mc-axis {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 14px;
+  align-items: end;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--edge);
+  margin-bottom: 14px;
+}
+.mc-months { display: grid; grid-template-columns: repeat(12, 1fr); }
+.mc-months span {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: var(--text-mute);
+  text-align: center;
+  border-left: 1px solid rgba(242, 238, 224, 0.1);
+  padding-bottom: 2px;
+}
+.mc-months span:first-child { border-left: 0; }
+.mc-axis-label {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+.mc-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 5px 0;
+}
+.mc-row:hover .mc-bar { filter: brightness(1.25); }
+.mc-name { font-family: var(--serif); font-size: 0.95rem; line-height: 1.3; }
+.mc-name small {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text-mute);
+  letter-spacing: 0.03em;
+}
+.mc-track {
+  position: relative;
+  height: 22px;
+  background:
+    repeating-linear-gradient(to right,
+      rgba(242,238,224,0.09) 0 1px,
+      transparent 1px calc(100% / 12));
+  border-radius: 4px;
+}
+.mc-bar {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  border-radius: 999px;
+  transition: filter 0.2s ease;
+  min-width: 6px;
+}
+.mc-today {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--ember);
+  box-shadow: 0 0 8px var(--ember);
+  z-index: 2;
+}
+.mc-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  justify-content: center;
+  margin-top: 18px;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+}
+.mc-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.mc-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+@media (max-width: 620px) {
+  .mc-axis, .mc-row { grid-template-columns: 120px 1fr; gap: 10px; }
+  .mc-name { font-size: 0.86rem; }
+}
+
 /* ---------- Crop month strips ---------- */
 .strip { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; padding-top: 6px; }
 .strip .cell { height: 8px; border-radius: 3px; background: rgba(242, 238, 224, 0.16); }
@@ -798,6 +899,36 @@ footer .sign {
       <p class="sub">Each Sesotho month is named for what the fields, birds, and weather are doing.</p>
     </div>
     <div id="months-grid" class="grid months"></div>
+  </div>
+</section>
+
+<section id="likhoeli-moons" class="shell" data-reveal>
+  <div class="reveal">
+    <div class="section-head">
+      <p class="eyebrow">Ho bala likhoeli · Counting the moons</p>
+      <h2>The year measured in moons</h2>
+      <p class="sub" id="moons-intro">&nbsp;</p>
+    </div>
+
+    <div class="moonchart">
+      <div class="moonchart-inner">
+        <div class="mc-axis">
+          <span class="mc-axis-label">Khoeli</span>
+          <div class="mc-months" id="mc-months"></div>
+        </div>
+        <div id="mc-rows"></div>
+      </div>
+    </div>
+
+    <div class="mc-legend">
+      <span><i style="background:var(--selemo)"></i>Selemo</span>
+      <span><i style="background:var(--lehlabula)"></i>Lehlabula</span>
+      <span><i style="background:var(--kotulo)"></i>Kotulo</span>
+      <span><i style="background:var(--mariha)"></i>Mariha</span>
+      <span><i style="background:var(--ember)"></i>Kajeno · today</span>
+    </div>
+
+    <p class="note" id="moons-note"></p>
   </div>
 </section>
 
@@ -1232,8 +1363,8 @@ window.ALEMANAKA_FEEDBACK = {
     { st: "Tšitoe",     en: "December",  cal: 11, season: "lehlabula", meaning: "The cicada (tšitoe) sings through the hottest days." },
     { st: "Pherekhong", en: "January",   cal: 0,  season: "lehlabula", meaning: "Fires and sticks guard the ripening mabele from the birds." },
     { st: "Hlakola",    en: "February",  cal: 1,  season: "kotulo",    meaning: "The sorghum wipes itself clean as the grain swells." },
-    { st: "Hlakubele",  en: "March",     cal: 2,  season: "kotulo",    meaning: "Grain shows red on the head — harvest draws near." },
-    { st: "'Mesa",      en: "April",     cal: 3,  season: "mariha",    meaning: "Fires are lit (ho besa) against the first cold." },
+    { st: "Hlakubele",  en: "March",     cal: 2,  season: "kotulo",    meaning: "Tlhaku ea mabele — the head of the sorghum, formed and filling out." },
+    { st: "'Mesa",      en: "April",     cal: 3,  season: "mariha",    meaning: "'Meso — the burning. Old growth and stubble are put to the fire." },
     { st: "Motšeanong", en: "May",       cal: 4,  season: "mariha",    meaning: "The mabele laughs at the birds — too hard now to steal." },
     { st: "Phuptjane",  en: "June",      cal: 5,  season: "mariha",    meaning: "The lesser digging — winter stores are drawn upon." },
     { st: "Phupu",      en: "July",      cal: 6,  season: "mariha",    meaning: "The great digging of wild roots; the year turns toward spring." }
@@ -1349,6 +1480,62 @@ window.ALEMANAKA_FEEDBACK = {
     return "M " + top + " A " + r + " " + r + " 0 0 1 " + bottom +
            " A " + rx + " " + r + " 0 0 " + sweepB + " " + top + " Z";
   }
+
+  /* ------------------------------------------------------------
+     THE MOON CYCLES OF THE YEAR
+
+     In Sesotho the word for month and the word for moon are the same:
+     khoeli. The traditional year is counted in full moons, beginning with
+     the last full moon of July.
+
+     The count is computed, not fixed, because it genuinely varies. Twelve
+     lunar cycles run about 354 days and thirteen about 384, against a solar
+     year of 365 — so some years hold twelve moons and some thirteen. That
+     mismatch is the reason the tradition speaks of thirteen at all.
+     ------------------------------------------------------------ */
+
+  function fullMoonAt(k) {
+    return new Date(NEW_MOON_EPOCH + (k + 0.5) * SYNODIC * DAY_MS);
+  }
+
+  /** Index of the last full moon falling on or before the given date. */
+  function lastFullMoonIndex(d) {
+    var k = Math.floor((d.getTime() - NEW_MOON_EPOCH) / DAY_MS / SYNODIC - 0.5);
+    while (fullMoonAt(k + 1) <= d) k++;
+    while (fullMoonAt(k) > d) k--;
+    return k;
+  }
+
+  /** The agricultural year containing `d`, as { gregorianStart, cycles[] }. */
+  function moonCyclesFor(d) {
+    // The year is chosen by the anchor moon, not by the calendar month. In the
+    // days between the last full moon of July and the 31st, the moons have
+    // already turned over while the Gregorian month has not — the counting
+    // should follow the moon.
+    var y = d.getFullYear();
+    if (d < fullMoonAt(lastFullMoonIndex(new Date(y, 6, 31, 23, 59, 59)))) y -= 1;
+
+    var anchor = new Date(y, 6, 31, 23, 59, 59);        // last moment of July
+    var nextAnchor = new Date(y + 1, 6, 31, 23, 59, 59);
+
+    var k0 = lastFullMoonIndex(anchor);
+    var k1 = lastFullMoonIndex(nextAnchor);
+
+    var cycles = [];
+    for (var k = k0; k < k1; k++) {
+      cycles.push({ start: fullMoonAt(k), end: fullMoonAt(k + 1) });
+    }
+    return { gregorianStart: new Date(y, 7, 1), gregorianEnd: new Date(y + 1, 6, 31), cycles: cycles };
+  }
+
+  // Ordinals in Sesotho. These need a native speaker's eye — the compound
+  // forms from eleven upward especially.
+  var KHOELI_ORDINALS = [
+    "ea pele", "ea bobeli", "ea boraro", "ea bone", "ea bohlano",
+    "ea botšelela", "ea bosupa", "ea borobeli", "ea borobong", "ea leshome",
+    "ea leshome le motso o mong", "ea leshome le metso e 'meli",
+    "ea leshome le metso e meraro"
+  ];
 
   function nextPhaseDate(from, target) {
     var cycles = (from.getTime() - NEW_MOON_EPOCH) / DAY_MS / SYNODIC;
@@ -1607,6 +1794,92 @@ window.ALEMANAKA_FEEDBACK = {
     }
     monthsGrid.appendChild(card);
   });
+
+  /* ============================================================
+     RENDER — the moon-cycle chart
+     ============================================================ */
+
+  (function () {
+    var year = moonCyclesFor(now);
+    var axisStart = year.gregorianStart.getTime();
+    var axisEnd = new Date(year.gregorianEnd.getFullYear(), 6, 31, 23, 59, 59).getTime();
+    var span = axisEnd - axisStart;
+
+    function pct(t) {
+      return Math.max(0, Math.min(100, ((t - axisStart) / span) * 100));
+    }
+
+    // Month labels across the top, in agricultural-year order.
+    var axis = document.getElementById("mc-months");
+    MONTHS.forEach(function (m) {
+      var s = document.createElement("span");
+      // Five characters, so Phuptjane and Phupu stay distinguishable.
+      s.textContent = m.st.slice(0, 5);
+      s.title = m.st + " · " + m.en;
+      axis.appendChild(s);
+    });
+
+    var rows = document.getElementById("mc-rows");
+    var seasonOf = {};
+    SEASONS.forEach(function (s) { seasonOf[s.id] = s.color; });
+
+    year.cycles.forEach(function (c, i) {
+      var row = document.createElement("div");
+      row.className = "mc-row";
+
+      var label = document.createElement("div");
+      label.className = "mc-name";
+      label.textContent = "Khoeli " + (KHOELI_ORDINALS[i] || "ea " + (i + 1));
+      var dates = document.createElement("small");
+      dates.textContent = fmtShort(c.start) + " – " + fmtShort(new Date(c.end.getTime() - DAY_MS));
+      label.appendChild(dates);
+      row.appendChild(label);
+
+      var track = document.createElement("div");
+      track.className = "mc-track";
+
+      var bar = document.createElement("div");
+      bar.className = "mc-bar";
+      var left = pct(c.start.getTime());
+      var right = pct(c.end.getTime());
+      bar.style.left = left + "%";
+      bar.style.width = Math.max(0.8, right - left) + "%";
+      var season = currentSeason(c.start);
+      bar.style.background = seasonOf[season.id];
+      bar.style.boxShadow = "0 0 10px " + seasonOf[season.id] + "66";
+      bar.title = "Khoeli " + (KHOELI_ORDINALS[i] || i + 1) + " · " + season.name;
+      track.appendChild(bar);
+
+      // Mark today on whichever cycle currently holds it.
+      if (now >= c.start && now < c.end) {
+        var mark = document.createElement("div");
+        mark.className = "mc-today";
+        mark.style.left = pct(now.getTime()) + "%";
+        mark.title = "Kajeno · today";
+        track.appendChild(mark);
+      }
+
+      row.appendChild(track);
+      rows.appendChild(row);
+    });
+
+    var n = year.cycles.length;
+    var startY = year.gregorianStart.getFullYear();
+    document.getElementById("moons-intro").textContent =
+      "Khoeli means both moon and month. This year the land turns through " + n +
+      " full moons, the first rising on " + fmtDate(year.cycles[0].start) +
+      ". Each bar below is one moon, laid over the Gregorian months so you can " +
+      "read your own calendar against the older one.";
+
+    document.getElementById("moons-note").innerHTML =
+      "<strong>Likhoeli tse leshome le metso e meraro:</strong> the tradition counts " +
+      "thirteen moons in a year, and that is why. Twelve lunar cycles run about 354 " +
+      "days and thirteen about 384, while the sun takes 365 — so the moons drift " +
+      "against the dates, and a year holds twelve or thirteen depending on where the " +
+      "full moons happen to fall. The " + startY + "–" + String(startY + 1).slice(2) +
+      " year carries " + n + ". Counting begins at the last full moon of July, which is " +
+      "why the first moon can rise before August does.";
+  })();
 
   /* ============================================================
      RENDER — crops
